@@ -1,9 +1,7 @@
 ---
-title: "R Notebook"
+title: "Chapter 1"
 output: html_notebook
 ---
-
-
 
 ```{r}
 yield <- function(xi1, xi2) {
@@ -20,10 +18,11 @@ yield <- function(xi1, xi2) {
 xi1 <- seq(1, 8, length=100)
 xi2 <- seq(100, 1000, length=100)
 g <- expand.grid(xi1, xi2)
-y <- yield(g[, 1], g[, 2])
+y <- yield(g[,1], g[,2])
 ```
 
 ```{r}
+par(pty="s")
 persp(xi1, xi2, matrix(y, ncol=length(xi2)), 
       theta=45, phi=45, lwd=0.5, 
       xlab="xi1 : time", ylab="xi2 : temperature", zlab="yield", 
@@ -31,6 +30,7 @@ persp(xi1, xi2, matrix(y, ncol=length(xi2)),
 ```
 
 ```{r}
+par(pty="s")
 cols <- heat.colors(128)
 image(xi1, xi2, matrix(y, ncol=length(xi2)), col=cols,
       xlab="xi1 : time", ylab="xi2 : temperature")
@@ -46,11 +46,11 @@ first.order <- function(x1, x2) {
 ```{r}
 x1 <- x2 <- seq(-1, 1, length=100)
 g=expand.grid(x1, x2)
-eta1 <- matrix(first.order(g[, 1], g[, 2]), ncol=length(x2))
+eta1 <- matrix(first.order(g[,1], g[,2]), ncol=length(x2))
 ```
 
 ```{r}
-par(mfrow=c(1, 2))
+par(mfrow=c(1, 2), pty="s")
 persp(x1, x2, eta1, theta=30, phi=30, zlab="eta", expand=0.75, lwd=0.25)
 image(x1, x2, eta1, col=heat.colors(128))
 contour(x1, x2, matrix(eta1, ncol=length(x2)), add=TRUE)
@@ -63,11 +63,11 @@ first.order.i <- function(x1, x2) {
 ```
 
 ```{r}
-eta1i <- matrix(first.order.i(g[, 1], g[, 2]), ncol=length(x2))
+eta1i <- matrix(first.order.i(g[,1], g[,2]), ncol=length(x2))
 ```
 
 ```{r}
-par(mfrow=c(1, 2))
+par(mfrow=c(1, 2), pty="s")
 persp(x1, x2, eta1i, theta=30, phi=30, zlab="eta", expand=0.75, lwd=0.25)
 image(x1, x2, eta1i)
 contour(x1, x2, eta1i, add=TRUE)
@@ -84,7 +84,7 @@ eta2sm <- matrix(simple.max(g[,1], g[,2]), ncol=length(x2))
 ```
 
 ```{r}
-par(mfrow=c(1,2))
+par(mfrow=c(1,2), pty="s")
 persp(x1, x2, eta2sm, theta=30, phi=30, zlab="eta", expand=0.75, lwd=0.25)
 image(x1, x2, eta2sm, col=heat.colors(128))
 contour(x1, x2, eta2sm, add=TRUE)
@@ -101,7 +101,7 @@ eta2sr <- matrix(stat.ridge(g[,1], g[,2]), ncol=length(x2))
 ```
 
 ```{r}
-par(mfrow=c(1,2))
+par(mfrow=c(1,2), pty="s")
 persp(x1, x2, eta2sr, theta=30, phi=30, zlab="eta", expand=0.75, lwd=0.25)
 image(x1, x2, eta2sr, col=heat.colors(128))
 contour(x1, x2, eta2sr, add=TRUE)
@@ -117,7 +117,7 @@ eta2rr <- matrix(rise.ridge(g[,1], g[,2]), ncol=length(x2))
 ```
 
 ```{r}
-par(mfrow=c(1,2))
+par(mfrow=c(1,2), pty="s")
 persp(x1, x2, eta2rr, theta=30, phi=30, zlab="eta", expand=0.75, lwd=0.25)
 image(x1, x2, eta2rr, col=heat.colors(128))
 contour(x1, x2, eta2rr, add=TRUE)
@@ -135,7 +135,7 @@ eta2s <- matrix(saddle(g[,1], g[,2]), ncol=length(x2))
 ```
 
 ```{r}
-par(mfrow=c(1, 2))
+par(mfrow=c(1, 2), pty="s")
 persp(x1, x2, eta2s, theta=30, phi=30, zlab="eta", expand=0.75, lwd=0.25)
 image(x1, x2, eta2s, col=heat.colors(128))
 contour(x1, x2, eta2s, add=TRUE)
@@ -166,7 +166,7 @@ wingwt <- function(Sw=0.48, Wfw=0.4, A=0.38, L=0.5, q=0.62, l=0.344,
 ```{r}
 x <- seq(0, 1, length=100)
 g <- expand.grid(x, x)
-W.A.Nz <- wingwt(A=g[, 1], Nz=g[, 2])
+W.A.Nz <- wingwt(A=g[,1], Nz=g[,2])
 ```
 
 ```{r}
@@ -174,7 +174,8 @@ cs <- heat.colors(128)
 bs <- seq(min(W.A.Nz), max(W.A.Nz), length=129)
 ```
 
-```{r, fig.asp=1, fig.width=3}
+```{r}
+par(pty="s")
 image(x, x, matrix(W.A.Nz, ncol = length(x)), col=cs, breaks=bs, xlab="A", ylab="Nz")
 contour(x, x, matrix(W.A.Nz, ncol=length(x)), add=TRUE)
 ```
@@ -200,7 +201,7 @@ X
 
 ```{r}
 par(pty="s")
-plot(X[, 1:2], pch=19, cex=0.5)
+plot(X[,1:2], pch=19, cex=0.5)
 abline(h=c(0.6, 0.8), col=2, lwd=2)
 ```
 
@@ -235,8 +236,58 @@ fit.gp <- newGPsep(X, Y, 2, 1e-6, dK=TRUE)
 mle <- mleGPsep(fit.gp)
 ```
 
+```{r}
+baseline <- matrix(rep(as.numeric(formals(wingwt)), nrow(g)), ncol=9, byrow=TRUE)
+XX <- data.frame(baseline)
+names(XX) <- names(X)
+XX$A <- g[,1]
+XX$Nz <- g[,2]
+```
+
+```{r}
+p <- predGPsep(fit.gp, XX, lite=TRUE)
+p
+```
+
+```{r}
+par(pty="s")
+image(x, x, matrix(p$mean, ncol=length(x)), col=cs, breaks=bs, xlab="A", ylab="Nz")
+contour(x, x, matrix(p$mean, ncol=length(x)), add=TRUE)
+```
+
+```{r}
+data.frame(baseline)[1:length(x),]
+```
 
 
+```{r}
+meq1 <- meq2 <- me <- matrix(NA, nrow=length(x), ncol=ncol(X))
+for (i in 1:ncol(me)) {
+  XX <- data.frame(baseline)[1:length(x),]
+  XX[,i] <- x
+  p <- predGPsep(fit.gp, XX, lite=TRUE)
+  me[,i] <- p$mean
+  meq1[,i] <- qt(0.05, p$df)*sqrt(p$s2) + p$mean
+  meq2[,i] <- qt(0.95, p$df)*sqrt(p$s2) + p$mean
+}
+```
+
+```{r}
+par(pty="s")
+matplot(x, me, type="l", lwd=2, lty=1, col=1:9, xlab="coded input")
+matlines(x, meq1, type="l", lwd=2, lty=2, col=1:9)
+matlines(x, meq2, type="l", lwd=2, lty=2, col=1:9)
+legend("topleft", names(X)[1:5], lty=1, col=1:5, horiz=TRUE, bty="n", cex=0.5)
+legend("bottomright", names(X)[6:9], lty=1, col=6:9, horiz=TRUE, bty="n", cex=0.5)
+```
+
+
+## 1.4 
+
+```{r}
+wire <- read.csv("wire.csv")
+wire
+```
 
 
 

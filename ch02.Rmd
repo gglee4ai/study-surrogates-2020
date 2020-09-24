@@ -1,0 +1,180 @@
+---
+title: "Ch02"
+output: html_notebook
+---
+
+```{r}
+lgbb1 <- read.table("dataset/lgbb/lgbb_original.txt", header=TRUE)
+lgbb1
+```
+```{r}
+library(akima)
+```
+
+```{r}
+g <- interp(lgbb1$mach, lgbb1$alpha, lgbb1$lift, dupl="mean")
+par(pty="s")
+image(g, col=heat.colors(128), xlab="mach", ylab="alpha")
+points(lgbb1$mach, lgbb1$alpha, cex=0.25, pch=18)
+```
+
+```{r}
+apply(lgbb1[,1:3], 2, function(x) { length(unique(x)) })
+```
+
+```{r}
+a1b0 <- which(lgbb1$alpha == 1 & lgbb1$beta == 0)
+a1bn0 <- which(lgbb1$alpha == 1 & lgbb1$beta != 0)
+a1b0 <- a1b0[order(lgbb1$mach[a1b0])]
+a1bn0 <- a1bn0[order(lgbb1$mach[a1bn0])]
+par(pty="s")
+plot(lgbb1$mach[a1b0], lgbb1$lift[a1b0], type="l", xlab="mach", ylab="lift", ylim=range(lgbb1$lift[c(a1b0, a1bn0)]), lwd=2)
+lines(lgbb1$mach[a1bn0], lgbb1$lift[a1bn0], col=2, lty=2, lwd=2)
+text(4, 0.3, paste("length(a1b0) =", length(a1b0)))
+text(4, 0.25, paste("length(a1bn0) =", length(a1bn0)))
+legend("topright", c("beta = 0", "beta != 0"), col=1:2, lty=1:2, lwd=2)
+```
+
+```{r}
+lgbb2 <- read.table("dataset/lgbb/lgbb_as.txt", header=TRUE)
+lgbb2
+```
+```{r}
+par(pty="s")
+plot(lgbb2$mach, lgbb2$alpha, xlab="mach", ylab="alpha", pch=18, cex=0.5)
+```
+
+```{r}
+apply(lgbb2[,2:4], 2, function(x) { length(unique(x)) })
+```
+
+```{r}
+par(pty="s")
+a2 <- which(lgbb2$alpha == 1)
+a2 <- a2[order(lgbb2$mach[a2])]
+plot(lgbb2$mach[a2], lgbb2$lift[a2], type="l", xlab="mach", ylab="lift", lwd=2)
+text(4, 0.15, paste("length(a2) =", length(a2)))
+```
+
+```{r}
+load("dataset/lgbb/lgbb_fill.Rdata")
+lgbb.fill
+```
+```{r}
+lgbb.b1 <- lgbb.fill[lgbb.fill$beta == 1, ]
+g <- interp(lgbb.b1$mach, lgbb.b1$alpha, lgbb.b1$lift)
+par(pty="s")
+image(g, col=heat.colors(128), xlab="mach [beta=1]", ylab="alpha [beta=1]")
+```
+
+```{r}
+par(pty="s")
+plot(lgbb.b1$mach, lgbb.b1$lift, type="n", xlab="mach", ylab="lift [beta=1]")
+for(ub in unique(lgbb.b1$alpha)) {
+  a <- which(lgbb.b1$alpha == ub)
+  a <- a[order(lgbb.b1$mach[a])]
+  lines(lgbb.b1$mach[a], lgbb.b1$lift[a], type="l", lwd=2)
+}
+```
+
+```{r}
+crash <- read.csv("dataset/crash/CRASHExpt_clean.csv")
+crash$BeThickness <- 21
+names(crash)
+nrow(crash)
+```
+
+```{r}
+ce1 <- read.csv("dataset/crash/RS12_SLwithUnnormalizedInputs.csv")
+ce2 <- read.csv("dataset/crash/RS13Minor_SLwithUnnormalizedInputs.csv")
+ce2$ElectronFluxLimiter <- 0.06
+```
+
+```{r}
+sfmin <- ce2$EffectiveLaserEnergy/5000
+sflen <- 10
+ce2.sf <- matrix(NA, nrow=sflen*nrow(ce2), ncol=ncol(ce2) + 2)
+for(i in 1:sflen) {
+  sfi <- sfmin + (1 - sfmin)*(i/sflen)
+  ce2.sf[(i - 1)*nrow(ce2) + (1:nrow(ce2)),] <-
+    cbind(as.matrix(ce2), sfi, ce2$EffectiveLaserEnergy/sfi)
+}
+ce2.sf <- as.data.frame(ce2.sf)
+names(ce2.sf) <- c(names(ce2), "EnergyScaleFactor", "LaserEnergy")
+```
+
+```{r}
+par(pty="s")
+plot(ce2.sf$LaserEnergy, ce2.sf$EnergyScaleFactor, ylim=c(0.4, 1.1), 
+     xlab="Laser Energy", ylab="Energy Scale Factor")
+points(ce1$LaserEnergy, ce1$EnergyScaleFactor, col=2, pch=19)
+legend("bottomleft", c("CE2", "CE1"), col=1:2, pch=c(21,19))
+```
+
+```{r}
+u <- apply(crash, 2, function(x) { length(unique(x)) })
+u
+```
+
+```{r}
+fit <- lm(ShockLocation ~ ., data=crash[, u >1])
+summary(fit)$coefficients %>% signif(digits = 3)
+```
+
+```{r}
+par(pty="s")
+fit.time <- lm(ShockLocation ~ Time, data=crash)
+plot(crash$Time, crash$ShockLocatio, xlab="time", ylab="location")
+abline(fit.time)
+```
+
+```{r}
+x <- ce1$Time
+y <- ce1$LaserEnergy * ce1$EnergyScaleFactor
+g <- interp(x/max(x), y/max(y), ce1$ShockLocation, dupl="mean")
+par(pty="s")
+image(g, col=heat.colors(128), xlab="scaled time", ylab="scaled energy")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

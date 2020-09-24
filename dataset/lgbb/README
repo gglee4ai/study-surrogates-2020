@@ -1,0 +1,74 @@
+Langley Glide-Back Booster (LGBB) Dataset(s)
+
+PLEASE DO NOT LINK TO ANY OF THESE FILES ON THE INTERNET, NOR PASS
+THESE TO ANYONE WITHOUT PRIOR PERMISSION.  THEY ARE MADE AVAILABLE BY
+REQUEST ONLY.
+
+LGBB is a rocket booster concept developed at NASA/Langley.
+For more information, please see:
+
+"Aerodynamic characteristics and glide-Back performance of Langley
+glide-back booster". Bandu N. Pamadi, Peter F. Covell, Paul
+V. Tartabini and Kelly J. Murphy.  22nd Applied Aerodynamics
+Conference and Exhibit August 2004, Providence, Rhode Island.  (see
+AIAA_2004_5382.pdf)
+
+"Ascent, stage preparation and glide-back performance of a partially
+reusable small launch vehicle". Bandu N. Pamadi, Paul V. Tartabini and
+Brett R. Starr (2004); Vehicle Analysis Branch Aerospace Systems
+Concepts and Analysis Competency NASA Langley Research Center,
+Hampton, VA.  (see AIAA_2004-0876.pdf)
+
+An initial computer experiment using Euler solver and distributed
+computing to explore the relationship between speed (mach), angle of
+attack (alpha), slide-slip angle (beta) on six aeronautically relevant
+outputs (lift, drag, etc.)  upon re-entry of the LGBB into the
+atmosphere.  For more information, please see:
+
+"Automated CFD Parameter Studies on Distributed Parallel
+Computers". Rogers, S. E., Aftosmis, M. J., Pandya, S. A.,
+N. M. Chaderjian, E. T. T., and Ahmad, J. U. (2003).  In 16th AIAA
+Computational Fluid Dynamics Conference. AIAA Paper 2003-4229. (see
+AIAA_2003_4229.pdf)
+
+The file lgbb_original.txt corresponds to the above experiment.  An
+iteratively hand-crafted gridding (settings of mach, alpha, and beta),
+focused most of the inputs near mach=1 and large alpha.  Due to poor
+detection of convergence in the Euler solver in this initial
+experiment, the six responses (lift, drag, ...) appear "noisy".
+
+An automated and adaptive sequential design methodology was developed
+around the Bayesian treed Gaussian proceses (GP) as a surrogate model.
+Please see:
+
+"Bayesian treed Gaussian process models with an application to
+computer modeling".  Robert B. Gramacy and Herbert K. H. Lee. (2008)
+Journal of the American Statistical Association, 103(483),
+pp. 1119-1130; arXiv:0710.5837
+
+Adaptive sampling combines classical sequential design strategies and
+active learning techniques.  Proof of concept adaptive sampling
+experiments with the treed GP used the gridded data and responses
+(lgbb_original.txt) instead of the real Euler solver.  Please see:
+
+"Parameter Space Exploration With Gaussian Process Trees". Robert
+B. Gramacy, Herbert K. H. Lee, and William G. MacReady. (2004)
+Proceedings of the International Conference on Machine Learning, pp
+353-360, Omnipress and ACM Digital Library (see ams2004-04.pdf)
+
+Later, a real experiment was sequentially designed on NASA's columbia
+supercomputer using a custom AeroDB interface to the Euler solvers,
+and driven by the treed GP adaptive sampling methodology.
+
+"Adaptive design and and analysis of supercomputer experiments".
+Robert B. Gramacy and Herbert K. H. Lee. (2009) Technometrics 51(2),
+pp. 130-145; arXiv:0805.4359
+
+In addition to the automated and adaptive sequential design, the
+experiments used an updated version of the Euler solver, and a more
+robust convergence detection algorithm.  The file lgbb_as.txt contains
+the 780 adaptively sampled locations.  The rows are arranged in the
+order that they were adaptive sampled. Adaptive samples were selected
+from the dense 3-d grid of 37908 locations listed in
+lgbb_as_planned.txt, and the file lgbb_as_rest.txt contains the
+remaining unused (37128) grid locations.
