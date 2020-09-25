@@ -1,8 +1,6 @@
 ---
 title: "Ch 03"
 output: html_notebook
-editor_options: 
-  chunk_output_type: inline
 ---
 
 ```{r}
@@ -51,6 +49,7 @@ plasma
 ```{r}
 library(magrittr)
 fit.int <- lm(etch ~ x1*x2, data=plasma)
+summary(fit.int)
 summary(fit.int)$coefficients %>% signif(digits=4)
 ```
 
@@ -58,6 +57,11 @@ summary(fit.int)$coefficients %>% signif(digits=4)
 fit <- lm(etch ~ x1 + x2, data=plasma)
 summary(fit)
 coef(fit)
+```
+
+```{r}
+AIC(fit, fit.int)
+BIC(fit, fit.int)
 ```
 
 ```{r}
@@ -99,20 +103,159 @@ plasma.delta
 max(plasma$etch)
 ```
 
+```{r}
+r <- cbind(c(1, 2), c(100, 150), c(500, 1000), c(75, 120))
+colnames(r) <- c("vel", "temp", "mpress", "bpress")
+r
+```
+
+```{r}
+base <- r[1,] + (r[2,] - r[1,])/2
+base
+```
+
+```{r}
+b <- c(-5.24, -6.22, -1.21, -1.07)
+delta <- b/b[1]
+delta
+```
+
+```{r}
+path <- rbind(0, apply(matrix(rep(delta, 4), ncol=4, byrow=TRUE), 2, cumsum))
+colnames(path) <- paste0("x", 1:4)
+rownames(path) <- paste0("Base +", 0:4, "Δ")
+path
+```
+
+```{r}
+dnat <- delta*(r[2,] - r[1,])/2
+dnat
+```
+
+```{r}
+matrix(rep(base, 4), ncol=4, byrow=TRUE)
+```
+
+```{r}
+pnat <- rbind(base, matrix(rep(base, 4), ncol=4, byrow=TRUE) + 
+                apply(matrix(rep(dnat, 4), ncol=4, byrow=TRUE), 2, cumsum))
+colnames(pnat) <- c("ft/sec", "°C", "psi", "psi")
+rownames(pnat) <- rownames(path)
+signif(cbind(path, pnat), digits=5)
+```
+
+```{r}
+x1 <- seq(0, 1, length=1000)
+x2 <- sqrt(1 - x1^2)
+x1 <- c(x1, x1)
+x2 <- c(x2, -x2)
+ci95 <- (3*x1 - 1.5*x2)^2 >= 9.3225
+
+par(pty="s")
+plot(0, type="n", xlim=c(-2, 3.5), ylim=c(-2, 3.5), xlab="x1", ylab="x2")
+points(D, pch=19)
+points(0, 0)
+arrows(0, 0, 3, -1.5)
+points(x1, x2, col=2 + ci95, pch=19, cex=0.5)
+#plot(x1, x2)
+```
+
+```{r}
+theta <- asin(sqrt(0.25*7.71*(1/11.25)))
+theta
+```
+
+```{r}
+O <- c(4/3, 8/3)
+```
+
+```{r}
+par(pty="s")
+plot(0, 0, type="n", xlab="x1", ylab="x2", xlim=c(0, 4), ylim=c(0, 5))
+arrows(0, 0, O[1], O[2], col=2, lwd=3)
+arrows(O[1], O[2], 3, 2 + 3/2, col=3, lwd=3)
+text(O[1] - 0.1, O[2] + 0.2, "O")
+abline(0, 2, lty=2)
+abline(2, 0.5, lty=3)
+text(1.5, 1, "steepest ascent", col=2)
+text(2.5, 2.7, "constrained", col=3)
+```
+
+```{r}
+upper <- c(150, 100, 40)
+lower <- c(100, 50, 20)
+scale <- (upper - lower) / 2
+shift <- scale + lower
+toxi <- data.frame(scale=scale, shift=shift)
+toxi
+```
+
+```{r}
+c <- c(-300, 25, 25, 0)
+```
 
 
+```{r}
+b <- c(150, 1.7, 0.8, 0.5)
+```
 
+```{r}
+rhoo <- -c[1]/sum(c[-1]*b[-1])
+rhoo
+```
 
+```{r}
+xo <- rhoo*b[-1]
+xo
+```
 
+```{r}
+d <- as.numeric(coef(lm(b[-1] ~ c[-1] - 1)))
+d
+```
 
+```{r}
+hpath <- function(lambda, b, c, rhoo, d)
+ {
+  ## steepest ascent up to one step past the constraint boundary
+  delta <- b/b[1]
+  path <- matrix(0, ncol=length(b), nrow=1)
+  while(1) {
+    lpath <- nrow(path)
+    path <- rbind(path, path[lpath,] + delta)
+    if(c[1] + sum(path[lpath + 1,]*c[-1]) > 0) break
+  }
+    
+  ## intersection point plus steps along the modified portion
+  cpath <- rhoo*b
+  for(i in 1:length(lambda)) {
+    cpath <- rbind(cpath, rhoo*b + lambda[i]*(b - d*c[-1]))
+  }
+    
+  ## pasting the hybrid path together and naming the rows and columns
+  path <- rbind(path[1:lpath,], cpath)
+  colnames(path) <- paste("x", 1:length(b), sep="")
+  rownames(path) <- c(rep("u", lpath), "o", rep("c", length(lambda)))
+  return(path)
+ }
+```
 
+```{r}
+lambda <- c(1,2,3,4)
+path <- hpath(lambda, b[-1], c, rhoo, d)
+```
 
+```{r}
+A <- matrix(rep(toxi[,1], nrow(path)), ncol=ncol(path), byrow=TRUE)
+B <- matrix(rep(toxi[,2], nrow(path)), ncol=ncol(path), byrow=TRUE)
+pathxi <- A * path + B
+colnames(pathxi) <- paste("xi", 1:3, sep="")
+pathxi
+```
 
-
-
-
-
-
+```{r}
+pathxi[4:5,]
+```
 
 
 
