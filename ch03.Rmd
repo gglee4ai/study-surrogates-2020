@@ -259,12 +259,224 @@ pathxi[4:5,]
 
 
 
+## 3.2 Second-order response surfaces
+
+```{r}
+second.order <- function(x1, x2) {
+  100 + 5*x1 + 10*x2 - 8*x1^2 - 12*x2^2 - 12*x1*x2
+}
+```
+
+```{r}
+x1 <- x2 <- seq(-4, 5, length=100)
+g <- expand.grid(x1, x2)
+y <- matrix(second.order(g[,1], g[,2]), ncol=length(x2))
+```
+
+```{r}
+par(mfrow=c(1,2), pty="s")
+persp(x1, x2, y, theta=30, phi=30, zlab="eta", expand=0.75, lwd=0.25)
+image(x1, x2, y, col=heat.colors(128))
+contour(x1, x2, y, add=TRUE)
+```
+
+```{r}
+dy <- rbind(c(16, 12), c(12, 24))
+xh <- solve(dy, c(5, 10))
+#yh <- 100 + 5*xh[1] + 10*xh[2] - 8*xh[1]^2 - 12*xh[2]^2 - 12*xh[1]*xh[2]
+yh <- second.order(xh[1], xh[2])
+c(x1=xh[1], x2=xh[2], y=yh)
+```
+
+```{r}
+b0 <- 100
+b <- c(5, 10)
+B <- matrix(c(-8, -12/2, -12/2, -12), ncol=2, byrow=TRUE)
+B
+```
+
+```{r}
+xs <- -0.5*solve(B) %*% b
+ys <- b0 + 0.5*t(xs) %*% b
+sols <- rbind(h = c(xh, yh), s=c(xs, ys))
+colnames(sols) <- c("x1", "x2", "y")
+sols
+```
+
+```{r}
+E <- eigen(B)
+lambda <- E$values
+o <- order(abs(lambda), decreasing=TRUE)
+lambda <- lambda[o]
+lambda
+```
+
+```{r}
+V <- E$vectors[,o]
+```
+
+```{r}
+par(pty="s")
+image(x1, x2, y, col=cols)
+contour(x1, x2, y, add=TRUE)
+lines(c(-V[1,1], V[1,1])*10 + xs[1], c(-V[2,1], V[2,1])*10 + xs[2], lty=2)
+lines(c(-V[1,2], V[1,2])*10 + xs[1], c(-V[2,2], V[2,2])*10 + xs[2], lty=2)
+```
+
+```{r}
+chem <- read.table("dataset/chemical.txt", header=TRUE)
+chem
+uchem <- unique(chem[,1:2])
+uchem
+```
 
 
+```{r}
+library(dplyr)
+chem %>% 
+  group_by(x1, x2) %>% 
+  summarize(n = n(), .groups="drop") %>% 
+  ungroup() %>% 
+  pull(n) -> reps
+reps
+```
+
+```{r}
+reps <- apply(uchem, 1, function(x) {
+  sum(apply(chem[,1:2], 1, function(y) { all(y == x) }))
+})
+reps
+```
+
+```{r}
+par(pty="s")
+plot(uchem, type="n")
+text(uchem, labels=reps)
+```
+```{r}
+X <- with(chem, data.frame(x1=x1, x2=x2, x11=x1^2, x22=x2^2, x12=x1*x2))
+y <- chem$y
+fit <- lm(y ~ ., data=X)
+summary(fit)
+```
 
 
+```{r}
+r <- cbind(c(200, 250), c(15, 25))
+d <- (r[2,] - r[1,])/2
+xi1 <- seq(min(chem$temp), max(chem$temp), length=100)
+xi2 <- seq(min(chem$conc), max(chem$conc), length=100)
+xi <- expand.grid(xi1, xi2)
+x <- cbind((xi[,1] - r[2,1] + d[1])/d[1], (xi[,2] - r[2,2] + d[2])/d[2])
+```
 
+```{r}
+XX <- data.frame(x1=x[,1], x2=x[,2], x11=x[,1]^2, x22=x[,2]^2, x12=x[,1]*x[,2])
+p <- predict(fit, newdata=XX)
+head(p)
+```
 
+```{r}
+par(pty="s")
+xlab <- "Temperature (°C)"
+ylab <- "Concentration (%)"
+image(xi1, xi2, matrix(p, nrow=length(xi1)), col=cols, xlab=xlab, ylab=ylab)
+contour(xi1, xi2, matrix(p, nrow=length(xi1)), add=TRUE)
+```
+```{r}
+b <- coef(fit)[2:3]
+B <- matrix(NA, nrow=2, ncol=2)
+diag(B) <- coef(fit)[4:5]
+B[1, 2] <- B[2, 1] <- coef(fit)[6]/2
+xs <- -1/2*solve(B, b)
+xs
+```
 
+```{r}
+xis <- xs*d + (r[2,] - d)
+xis
+```
 
+```{r}
+E <- eigen(B)
+E
+```
+
+```{r}
+lambda <- E$values
+o <- order(abs(lambda), decreasing=TRUE)
+lambda <- lambda[o]
+V <- E$vectors[,o]
+Vxi <- V
+for(j in 1:ncol(Vxi)) Vxi[,j] <- Vxi[,j]*d*10
+```
+
+```{r}
+par(pty="s")
+image(xi1, xi2, matrix(p, nrow=length(xi1)), col=cols, xlab=xlab, ylab=ylab)
+contour(xi1, xi2, matrix(p, nrow=length(xi1)), add=TRUE)
+lines(c(-Vxi[1,1], Vxi[1,1])+xis[1], c(-Vxi[2,1], Vxi[2,1])+xis[2], lty=2)
+lines(c(-Vxi[1,2], Vxi[1,2])+xis[1], c(-Vxi[2,2], Vxi[2,2])+xis[2], lty=2)
+points(xis[1], xis[2])
+text(xis[1], xis[2], "xs", pos=4)
+```
+
+```{r}
+ys <- as.numeric(coef(fit)[1] + 0.5*t(xs) %*% b)
+```
+
+```{r}
+rr <- read.table("dataset/risingridge.txt", header=TRUE)
+rr
+```
+```{r}
+rr$A2 <- rr$A^2
+rr$B2 <- rr$B^2
+rr$AB <- rr$A*rr$B
+fit <- lm(y ~ ., data=rr)
+summary(fit)
+```
+
+```{r}
+b <- coef(fit)[2:3]
+B <- matrix(NA, nrow=2, ncol=2)
+diag(B) <- coef(fit)[4:5]
+B[1,2] <- B[2,1] <- coef(fit)[6]/2
+xs <- -1/2*solve(B, b)
+xs
+```
+
+```{r}
+apply(rr[,1:2], 2, range)
+```
+
+```{r}
+E <- eigen(B)
+lambda <- E$values
+o <- order(abs(lambda), decreasing=TRUE)
+V <- E$vectors[,o]*20
+lambda <- lambda[o]
+lambda
+```
+
+```{r}
+ys <- coef(fit)[1] + 0.5*t(xs) %*% b
+ys
+```
+
+```{r}
+x <- seq(-6, 6, length=100)
+xx <- expand.grid(x, x)
+XX <- data.frame(A=xx[,1], B=xx[,2], A2=xx[,1]^2, B2=xx[,2]^2, AB=xx[,1]*xx[,2])
+p <- predict(fit, newdata=XX)
+par(pty="s")
+image(x, x, matrix(p, nrow=length(x)), col=cols, xlab="A", ylab="B")
+contour(x, x, matrix(p, nrow=length(x)), add=TRUE)
+lines(c(-V[1,1], V[1,1]) + xs[1], c(-V[2,1], V[2,1]) + xs[2], lty=2)
+lines(c(-V[1,2], V[1,2]) + xs[1], c(-V[2,2], V[2,2]) + xs[2], lty=2)
+polygon(c(1,1,-1,-1), c(1,-1,-1,1), lty=3)
+text(0, -0.5, "design region", cex=0.5)
+points(xs[1], xs[2])
+text(xs[1], xs[2], "xs", pos=4)
+```
 
