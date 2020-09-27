@@ -621,20 +621,172 @@ image(x12, x12, matrix(p1$se.fit, nrow=length(x12)), col=cols,
 contour(x12, x12, matrix(p1$se.fit, nrow=length(x12)), add=TRUE)
 points(saddle[,1:2])
 points(saddle[apply(saddle[,3:4] == c(1, 1), 1, all), 1:2], pch=19)
+```
+```{r}
+crdat <- read.table("dataset/confreg.txt", header=TRUE)
+crdat
+```
+```{r}
+crdat$x11 <- crdat$x1^2
+crdat$x22 <- crdat$x2^2
+crdat$x12 <- crdat$x1 * crdat$x2
+crdat
+```
 
+```{r}
+fit <- lm(y ~ ., data=crdat)
+summary(fit)
+```
+
+```{r}
+b <- coef(fit)[2:3]
+B <- matrix(NA, nrow=2, ncol=2)
+diag(B) <- coef(fit)[4:5]
+B[1,2] <- B[2,1] <- coef(fit)[6]/2
+xs <- -(1/2)*solve(B, b)
+xs
+```
+
+```{r}
+eigen(B)$values
+```
+
+```{r}
+xx <- xx <- seq(-1.6, 1.6, length=200)
+g <- expand.grid(xx, xx)
+XX <- data.frame(x1=g[,1], x2=g[,2], x11=g[,1]^2, x22=g[,2]^2, x12=g[,1]*g[,2])
+p <- as.numeric(predict(fit, newdata=XX))
+head(p)
+```
+
+```{r}
+par(pty="s")
+image(xx, xx, matrix(p, nrow=length(xx)), col=cols, xlab="x1", ylab="x2")
+contour(xx, xx, matrix(p, nrow=length(xx)), add=TRUE)
+points(crdat$x1, crdat$x2, pch=20)
+points(xs[1], xs[2])
+text(xs[1], xs[2], "xs", pos=4)
+```
+
+```{r}
+d <- rbind(c(b[1], 2*B[,1]), c(b[2], 2*B[,2]))
+colnames(d) <- c("(Intercept)", "t1", "t2")
+d
+```
+
+```{r}
+d <- cbind(b, 2*B)
+colnames(d) <- c("(Intercept)", "t1", "t2")
+d
+```
+
+```{r}
+s2 <- summary(fit)$sigma^2
+s2
+```
+
+```{r}
+X <- cbind(1, as.matrix(crdat[,-3]))
+XtXi <- solve(t(X) %*% X)
+XtXi
+```
+
+```{r}
+Vard <- function(t1, t2, s2, XtXi) {
+  v11 <- XtXi[2,2] + 4*t1^2*XtXi[4,4] + t2^2*XtXi[6,6]
+  v22 <- XtXi[3,3] + t1^2*XtXi[6,6] + 4*t2^2*XtXi[5,5]
+  v12 <- v21 <- 4*t1*t2*XtXi[4,5] + t1*t2*XtXi[6,6]
+  v <- s2* matrix(c(v11,v12,v21,v22), ncol=2, byrow=TRUE)
+  v
+}
+```
+
+```{r}
+CIqf <- function(t1, t2, s2, XtXi, b, B) {
+  dt <- b + 2*B %*% c(t1, t2)
+  V <- Vard(t1, t2, s2, XtXi)
+  Vi <- solve(V)
+  t(dt) %*% Vi %*% dt
+}
 ```
 
 
+```{r}
+quadform <- rep(NA, nrow(g))
+for(i in 1:nrow(g)) quadform[i] <- CIqf(g[i,1], g[i,2], s2, XtXi, b, B)
+```
 
+```{r}
+ci90 <- quadform <= 2*qf(0.9, 2, nrow(X) - ncol(X))
+ci95 <- quadform <= 2*qf(0.95, 2, nrow(X) - ncol(X))
+par(pty="s")
+image(xx, xx, matrix(ci90 + ci95, ncol=length(xx)), xlab="x1", ylab="x2", col=c("white", "lightgray", "darkgray"))
+text(c(-0.2,-1), c(-0.5,1), c("90%","95%"))
+```
 
+```{r}
+summary(fit)$r.squared
+```
 
+```{r}
+crdat$y <- c(87.6, 86.5, 85.7, 86.9, 86.7, 86.8, 87.4, 86.7, 90.3, 91.0, 90.8)
+fit2 <- lm(y ~ ., data=crdat)
+summary(fit2)$r.squared
+```
 
+```{r}
+b <- coef(fit)[2:3]
+B <- matrix(NA, nrow=2, ncol=2)
+diag(B) <- coef(fit)[4:5]
+B[1,2] <- B[2,1] <- coef(fit)[6]/2
+xs <- -(1/2)*solve(B, b)
+s2 <- summary(fit2)$sigma^2
+for(i in 1:nrow(g)) quadform[i] <- CIqf(g[i,1], g[i,2], s2, XtXi, b, B)
+```
 
+```{r}
+ci95 <- quadform <= 2*qf(0.95, 2, nrow(X)-ncol(X))
+par(pty="s")
+image(xx, xx, matrix(ci95, ncol=length(xx)), xlab="x1", ylab="x2",
+    col=c("white", "lightgray"))
+```
 
+```{r}
+chem <- read.table("dataset/chemical.txt", header=TRUE)
+X <- data.frame(x1=chem$x1, x2=chem$x2, x11=chem$x1^2, x22=chem$x2^2, 
+  x12=chem$x1*chem$x2)
+y <- chem$y
+fit <- lm(y ~ ., data=X)
+b <- coef(fit)[2:3]
+B <- matrix(NA, nrow=2, ncol=2)
+diag(B) <- coef(fit)[4:5]
+B[1,2] <- B[2,1] <- coef(fit)[6]/2
+E <- eigen(B)
+lambda <- E$values
+o <- order(abs(lambda), decreasing=TRUE)
+P <- E$vectors[,o]
+print(lambda <- lambda[o])
+```
 
+```{r}
+U <- data.frame(cbind(chem$x1, chem$x2) %*% P)
+names(U) <- c("u1", "u2")
+U$u11 <- U$u1^2
+U$u22 <- U$u2^2
+fitU <- lm(y ~ ., data=U)
+```
 
+```{r}
+rbind(dlr2=coef(fitU)[-1], eigen=c(b %*% P, lambda))
+```
 
+```{r}
+summary(fitU)$coefficients[4:5,]
+```
 
+```{r}
+confint(fitU)[4:5,]
+```
 
 
 
