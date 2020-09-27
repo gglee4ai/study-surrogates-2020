@@ -480,3 +480,173 @@ points(xs[1], xs[2])
 text(xs[1], xs[2], "xs", pos=4)
 ```
 
+```{r}
+saddle <- read.table("dataset/saddle.txt", header=TRUE)
+saddle <- cbind(saddle[,-5]^2, model.matrix(~ .^2 - 1, saddle[,-5]), y=saddle[,5])
+names(saddle)[1:4] <- paste("x", 1:4, 1:4, sep="")
+names(saddle)[9:14] <- sub(":x", "", names(saddle)[9:14])
+saddle <- saddle[c(5:8, 1:4, 9:15)]
+
+saddle
+```
+```{r}
+fit <- lm(y ~ ., data=saddle)
+summary(fit)
+```
+
+```{r}
+b <- coef(fit)[2:5]
+B <- matrix(NA, nrow=4, ncol=4)
+diag(B) <- coef(fit)[6:9]
+i <- 10
+for (j in 1:3) {
+  for (k in (j+1):4) {
+    B[j,k] <- B[k,j] <- coef(fit)[i]/2
+    i <- i + 1
+  }
+}
+```
+
+```{r}
+xs <- -1/2*solve(B, b)
+xs
+```
+
+```{r}
+apply(saddle[,1:4], 2, range)
+```
+
+```{r}
+E <- eigen(B)
+lambda <- E$values
+o <- order(abs(lambda), decreasing=TRUE)
+lambda <- lambda[o]
+lambda
+```
+
+```{r}
+mul <- max(lambda)
+mul
+x <- solve(B - mul*diag(4), -b/2)
+x
+```
+
+```{r}
+f <- function(mu, R2=1) {
+  x <- solve(B - mu*diag(4), -b/2)
+  R2 - t(x) %*% x
+}
+```
+
+```{r}
+mu <- uniroot(f, c(mul, 10*mul), R2=1.4^2)$root
+mu
+```
+
+```{r}
+x <- solve(B - mu*diag(4), -b/2)
+x
+```
+
+```{r}
+drop(sqrt(t(x) %*% x))
+```
+
+```{r}
+mus <- rs <- seq(0.1, 2, length=20)
+xp <- matrix(NA, nrow=length(rs), ncol=4)
+colnames(xp) <- c("x1", "x2", "x3", "x4")
+for(i in 1:length(rs)) {
+  mus[i] <- uniroot(f, c(mul, 100*mul), R2=rs[i]^2)$root
+  xp[i,] <- solve(B - mus[i]*diag(4), -b/2)
+}
+xp <- rbind(rep(0, 4), xp)
+rs <- c(0, rs)
+mus <- c(Inf, mus)
+mus
+```
+
+```{r}
+Xp <- data.frame(xp)
+Xp <- cbind(Xp^2, model.matrix(~ .^2 - 1, Xp))
+names(Xp)[1:4] <- paste("x", 1:4, 1:4, sep="")
+names(Xp)[9:14] <- sub(":x", "", names(Xp)[9:14])
+Xp <- Xp[c(5:8, 1:4, 9:14)]
+Xp
+```
+
+```{r}
+p <- predict(fit, newdata=Xp, se.fit=TRUE)
+```
+
+```{r}
+cbind(R=rs, mu=mus, data.frame(pred=p$fit, se=p$se.fit), round(xp, 6))
+```
+```{r}
+par(pty="s")
+plot(rs, p$fit, type="b", ylim=c(20, 100), xlab="radius (R)", ylab="y.hat(x) & CIs")
+lines(rs, p$fit + 2*p$se, col=2, lty=2)
+lines(rs, p$fit - 2*p$se, col=2, lty=2)
+```
+
+```{r}
+x12 <- seq(-2, 2, length=100)
+g <- expand.grid(x12, x12)
+Xp <- data.frame(x1=g[,1], x2=g[,2], x11=g[,1]^2, x22=g[,2]^2, x12=g[,1]*g[,2])
+Xp
+```
+```{r}
+## x3 = x4 = 0
+Xp$x3 <- Xp$x33 <- Xp$x4 <- Xp$x44 <-Xp$x34 <- 0
+Xp$x13 <- Xp$x14 <- Xp$x23 <- Xp$x24 <- Xp$x34 <- 0
+p0 <- predict(fit, newdata=Xp, se.fit=TRUE)
+
+## x3 = x4 = 1
+Xp$x3 <- Xp$x33 <- Xp$x4 <- Xp$x44 <-Xp$x34 <- 1
+Xp$x13 <- Xp$x14 <- Xp$X23 <- Xp$X24 <- Xp$X34 <- 1
+p1 <- predict(fit, newdata=Xp, se.fit=TRUE)
+```
+
+```{r}
+par(mfrow=c(1, 2), pty="s")
+bs <- seq(min(p0$se.fit), max(p0$se.fit), length=129)
+image(x12, x12, matrix(p0$se.fit, nrow=length(x12)), col=cols,
+      breaks=bs, xlab="x1", ylab="x2", main="se.fit, x3 = x4 = 0")
+contour(x12, x12, matrix(p0$se.fit, nrow=length(x12)), add=TRUE)
+points(saddle[,1:2])
+points(saddle[apply(saddle[,3:4] == c(0,0), 1, all), 1:2], pch=19)
+
+image(x12, x12, matrix(p1$se.fit, nrow=length(x12)), col=cols,
+      breaks=bs, xlab="x1", ylab="x2", main="se.fit, x3 = x4 = 1")
+contour(x12, x12, matrix(p1$se.fit, nrow=length(x12)), add=TRUE)
+points(saddle[,1:2])
+points(saddle[apply(saddle[,3:4] == c(1, 1), 1, all), 1:2], pch=19)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
