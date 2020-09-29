@@ -3,3 +3,361 @@ title: "Chapter 4"
 output: html_notebook
 ---
 
+
+```{r}
+set.seed(20200929)
+m <- 2
+n <- 10
+X <- matrix(runif(n*m), ncol=m)
+colnames(X) <-paste0("x", 1:m)
+X
+```
+
+```{r}
+par(pty="s")
+plot(X, xlim=c(0, 1), ylim=c(0, 1))
+```
+```{r}
+l <- (-(n - 1)/2):((n - 1)/2)
+l
+```
+
+```{r}
+L <- matrix(NA, nrow=n, ncol=m)
+for(j in 1:m) L[,j] <- sample(l, n)
+L
+```
+
+```{r}
+U <- matrix(runif(n*m), ncol=m)
+X <- (L + (n - 1)/2 + U)/n
+X
+```
+
+```{r}
+par(pty="s")
+plot(X, xlim=c(0, 1), ylim=c(0, 1), xlab="x1", ylab="x2")
+abline(h=c((l + (n-1)/2)/n, 1), col="grey", lty=2)
+abline(v=c((l + (n-1)/2)/n, 1), col="grey", lty=2)
+```
+
+```{r}
+mylhs <- function(n, m) {
+  ## generate the Latin hypercube
+  l <- (-(n - 1)/2):((n - 1)/2)
+  L <- matrix(NA, nrow=n, ncol=m)
+  for (j in 1:m) L[,j] <- sample(l, n)
+  
+  U <- matrix(runif(n*m), ncol=m)
+  X <- (L + (n - 1)/2 + U)/n
+  return(list(X=X, g=c((l + (n - 1)/2)/n, 1)))
+}
+```
+
+
+```{r}
+Dlist <- mylhs(10, 3)
+Dlist
+```
+
+
+```{r}
+par(pty="s")
+plot(Dlist$X[,1:2], xlim=c(0, 1), ylim=c(0, 1), xlab="x1", ylab="x2")
+abline(h=Dlist$g, col="grey", lty=2)
+abline(v=Dlist$g, col="grey", lty=2)
+```
+
+```{r}
+Is <- as.list(as.data.frame(combn(ncol(Dlist$X), 2)))
+par(pty="s")
+par(mfrow=c(1, length(Is)))
+for (i in Is) {
+  plot(Dlist$X[,i], xlim=c(0,1), ylim=c(0,1),
+       xlab=paste0("x", i[1]), ylab=paste0("x", i[2]))
+  abline(h=Dlist$g, col="grey", lty=3)
+  abline(v=Dlist$g, col="grey", lty=3)
+}
+```
+
+```{r}
+X <- mylhs(1000, 3)$X
+par(pty="s")
+par(mfrow=c(1, ncol(X)))
+for(i in 1:ncol(X)) hist(X[,1], main="", xlab=paste("x", i))
+```
+
+
+```{r}
+count <- 0
+while(1) { 
+  count <- count + 1
+  Dlist <- mylhs(10, 2)
+  o <- order(Dlist$X[,1])
+  x <- Dlist$X[o,2]
+  if(all(x[1:9] < x[2:10] + 1/20)) break 
+}
+```
+
+
+```{r}
+par(pty="s")
+plot(Dlist$X, xlim=c(0,1), ylim=c(0,1), xlab="x1", ylab="x2")
+text(0.2, 0.85, paste("count =", count))
+abline(h=Dlist$g, col="grey", lty=2)
+```
+
+
+```{r}
+mylhs.beta <- function(n, m, shape1, shape2)
+ {
+  ## generate the Latin Hypercube and turn it into a sample
+  l <- (-(n - 1)/2):((n - 1)/2)
+  L <- matrix(NA, nrow=n, ncol=m)
+  for(j in 1:m) L[,j] <- sample(l, n)
+  U <- matrix(runif(n*m), ncol=m)
+  X <- (L + (n - 1)/2 + U)/n
+
+  ## calculate the grid for that design
+  g <- (L + (n - 1)/2)/n
+  g <- rbind(g, 1)
+
+  for(j in 1:m) { ## redistrbute according to beta quantiles
+    X[,j] <- qbeta(X[,j], shape1[j], shape2[j])
+    g[,j] <- qbeta(g[,j], shape1[j], shape2[j])
+  }
+  colnames(X) <- paste0("x", 1:m)
+
+  ## return the design and the grid it lives on for visualization
+  return(list(X=X, g=g))
+}
+```
+
+
+```{r}
+Dlist <- mylhs.beta(10, 2, shape1=c(3,1/2), shape2=c(2,1/2))
+```
+
+
+```{r}
+par(pty="s")
+plot(Dlist$X, xlim=c(0,1), ylim=c(0,1), xlab="x1", ylab="x2")
+abline(v=Dlist$g[,1], col="grey", lty=2)
+abline(h=Dlist$g[,1], col="grey", lty=2)
+```
+```{r}
+X <- mylhs.beta(1000, 2, shape1=c(3,1/2), shape2=c(2,1/2))$X
+head(X)
+```
+
+
+```{r}
+par(pty="s")
+par(mfrow=c(1,2))
+x <- seq(0, 1, length=100)
+hist(X[,1], main="", xlab="x1", freq=FALSE)
+lines(x, dbeta(x, 3, 2), col=2)
+hist(X[,2], main="", xlab="x2", freq=FALSE)
+lines(x, dbeta(x, 1/2, 1/2), col=2)
+```
+
+```{r}
+Dlist <- mylhs(20, 2)
+Xtrain <- Dlist$X[1:10,]
+Xtest <- Dlist$X[11:20,]
+```
+
+```{r}
+par(pty="s")
+plot(Xtrain, xlim=c(0,1), ylim=c(0,1), xlab="x1", ylab="x2")
+points(Xtest, pch=20)
+abline(v=Dlist$g, col="grey", lty=2)
+abline(h=Dlist$g, col="grey", lty=2)
+```
+
+## 4.2
+
+```{r}
+library(plgp)
+```
+
+```{r}
+distance(X[1:2], X[3:5])
+```
+
+```{r}
+X1 <- matrix(runif(n*m), ncol=m)
+dX1 <- distance(X1)
+dX1 <- dX1[upper.tri(dX1)]
+md1 <- min(dX1)
+X2 <- matrix(runif(n*m), ncol=m)
+dX2 <- distance(X2)
+dX2 <- dX2[upper.tri(dX2)]
+md2 <- min(dX2)
+```
+
+
+```{r}
+par(pty="s")
+plot(X1, xlim=c(0, 1.25), ylim=c(0, 1.25), xlab="x1", ylab="x2")
+points(X2, pch=20)
+legend("topright", paste("md =", round(c(md1, md2), 5)), pch=c(21, 20), cex=0.75)
+```
+
+```{r}
+T <- 10000
+for(t in 1:T) {
+  row <- sample(1:n, 1)
+  xold <- X1[row,]
+  X1[row,] <- runif(m)
+  d <- distance(X1)
+  d <- d[upper.tri(d)]
+  mdprime <- min(d)
+  if(mdprime >md1) {
+    md1 <- mdprime
+  } else {
+    X1[row,] <- xold
+  }
+}
+```
+
+
+```{r}
+par(pty="s")
+plot(X1, xlim=c(0,1), ylim=c(0,1), xlab="x1", ylab="x2")
+```
+
+```{r}
+mymaximin <- function(n, m, T=100000) {
+  X <- matrix(runif(n*m), ncol=m)     ## initial design
+  d <- distance(X)
+  d <- d[upper.tri(d)]
+  md <- min(d)
+
+  for(t in 1:T) {
+    row <- sample(1:n, 1)
+    xold <- X[row,]                   ## random row selection
+    X[row,] <- runif(m)               ## random new row
+    d <- distance(X)
+    d <- d[upper.tri(d)]
+    mdprime <- min(d)
+    if(mdprime > md) { md <- mdprime  ## accept
+    } else { X[row,] <- xold }        ## reject
+  }
+
+  return(X)
+}
+```
+
+
+```{r}
+X <- mymaximin(10, 3)
+```
+
+
+```{r}
+Is <- as.list(as.data.frame(combn(ncol(X), 2)))
+par(pty="s")
+par(mfrow=c(1, length(Is)))
+for(i in Is) {
+  plot(X[,i], xlim=c(0,1), ylim=c(0,1), type="n", 
+       xlab=paste0("x", i[1]), ylab=paste0("x", i[2]))
+  text(X[,i], labels=1:nrow(X))
+}
+```
+
+```{r}
+mymaximin <- function(n, m, T=100000, Xorig=NULL) {   
+  X <- matrix(runif(n*m), ncol=m)     ## initial design
+  d <- distance(X)
+  d <- d[upper.tri(d)]
+  md <- min(d)
+  if(!is.null(Xorig)) {               ## new code
+    md2 <- min(distance(X, Xorig))
+    if(md2 < md) md <- md2
+  }
+
+  for(t in 1:T) {
+    row <- sample(1:n, 1)
+    xold <- X[row,]                   ## random row selection
+    X[row,] <- runif(m)               ## random new row
+    d <- distance(X)
+    d <- d[upper.tri(d)]
+    mdprime <- min(d)
+    if(!is.null(Xorig)) {             ## new code
+      mdprime2 <- min(distance(X, Xorig))
+      if(mdprime2 < mdprime) mdprime <- mdprime2
+    }
+    if(mdprime > md) { md <- mdprime  ## accept
+    } else { X[row,] <- xold }        ## reject
+  }
+  
+  return(X)
+}
+```
+
+
+```{r}
+X2 <- mymaximin(5, 2, Xorig=X1)
+```
+
+
+```{r}
+par(pty="s")
+plot(X1, xlim=c(0,1), ylim=c(0,1), xlab="x1", ylab="x2")
+points(X2, pch=20)
+```
+
+```{r}
+X2 <- mymaximin(5, 3, Xorig=X)
+X <- rbind(X2, X)
+```
+
+
+```{r}
+Is <- as.list(as.data.frame(combn(ncol(X),2)))
+par(pty="s")
+par(mfrow=c(1,length(Is)))
+for(i in Is) {
+  plot(X[,i], xlim=c(0,1), ylim=c(0,1), type="n", xlab=paste0("x", i[1]), 
+    ylab=paste0("x", i[2]))
+  text(X[,i], labels=1:nrow(X), col=c(rep(2,5), rep(1,10))) 
+}
+```
+
+```{r}
+library(scatterplot3d)
+par(pty="s")
+scatterplot3d(X, type="h", color=c(rep(2,5), rep(1,10)),
+  pch=c(rep(20,5), rep(21,10)), xlab="x1", ylab="x2", zlab="x3")
+```
+
+
+```{r}
+library(lhs)
+X <- maximinLHS(10, 2)
+X
+```
+
+
+```{r}
+par(pty="s")
+plot(X, xlim=c(0,1), ylim=c(0,1), xlab="x1", ylab="x2")
+abline(h=seq(0, 1, length=11), col="gray", lty=2)
+abline(v=seq(0, 1, length=11), col="gray", lty=2)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
