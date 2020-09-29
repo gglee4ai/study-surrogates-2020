@@ -11,6 +11,7 @@ lgbb1
 library(akima)
 ```
 
+
 ```{r}
 g <- interp(lgbb1$mach, lgbb1$alpha, lgbb1$lift, dupl="mean")
 par(pty="s")
@@ -18,9 +19,11 @@ image(g, col=heat.colors(128), xlab="mach", ylab="alpha")
 points(lgbb1$mach, lgbb1$alpha, cex=0.25, pch=18)
 ```
 
+
 ```{r}
 apply(lgbb1[,1:3], 2, function(x) { length(unique(x)) })
 ```
+
 
 ```{r}
 a1b0 <- which(lgbb1$alpha == 1 & lgbb1$beta == 0)
@@ -35,6 +38,7 @@ text(4, 0.25, paste("length(a1bn0) =", length(a1bn0)))
 legend("topright", c("beta = 0", "beta != 0"), col=1:2, lty=1:2, lwd=2)
 ```
 
+
 ```{r}
 lgbb2 <- read.table("dataset/lgbb/lgbb_as.txt", header=TRUE)
 lgbb2
@@ -44,9 +48,11 @@ par(pty="s")
 plot(lgbb2$mach, lgbb2$alpha, xlab="mach", ylab="alpha", pch=18, cex=0.5)
 ```
 
+
 ```{r}
 apply(lgbb2[,2:4], 2, function(x) { length(unique(x)) })
 ```
+
 
 ```{r}
 par(pty="s")
@@ -55,6 +61,7 @@ a2 <- a2[order(lgbb2$mach[a2])]
 plot(lgbb2$mach[a2], lgbb2$lift[a2], type="l", xlab="mach", ylab="lift", lwd=2)
 text(4, 0.15, paste("length(a2) =", length(a2)))
 ```
+
 
 ```{r}
 load("dataset/lgbb/lgbb_fill.Rdata")
@@ -67,6 +74,7 @@ par(pty="s")
 image(g, col=heat.colors(128), xlab="mach [beta=1]", ylab="alpha [beta=1]")
 ```
 
+
 ```{r}
 par(pty="s")
 plot(lgbb.b1$mach, lgbb.b1$lift, type="n", xlab="mach", ylab="lift [beta=1]")
@@ -77,6 +85,7 @@ for(ub in unique(lgbb.b1$alpha)) {
 }
 ```
 
+
 ```{r}
 crash <- read.csv("dataset/crash/CRASHExpt_clean.csv")
 crash$BeThickness <- 21
@@ -84,11 +93,13 @@ names(crash)
 nrow(crash)
 ```
 
+
 ```{r}
 ce1 <- read.csv("dataset/crash/RS12_SLwithUnnormalizedInputs.csv")
 ce2 <- read.csv("dataset/crash/RS13Minor_SLwithUnnormalizedInputs.csv")
 ce2$ElectronFluxLimiter <- 0.06
 ```
+
 
 ```{r}
 sfmin <- ce2$EffectiveLaserEnergy/5000
@@ -103,6 +114,7 @@ ce2.sf <- as.data.frame(ce2.sf)
 names(ce2.sf) <- c(names(ce2), "EnergyScaleFactor", "LaserEnergy")
 ```
 
+
 ```{r}
 par(pty="s")
 plot(ce2.sf$LaserEnergy, ce2.sf$EnergyScaleFactor, ylim=c(0.4, 1.1), 
@@ -116,10 +128,12 @@ u <- apply(crash, 2, function(x) { length(unique(x)) })
 u
 ```
 
+
 ```{r}
 fit <- lm(ShockLocation ~ ., data=crash[, u >1])
-summary(fit)$coefficients %>% signif(digits = 3)
+signif(summary(fit)$coefficients, digits = 3)
 ```
+
 
 ```{r}
 par(pty="s")
@@ -127,6 +141,7 @@ fit.time <- lm(ShockLocation ~ Time, data=crash)
 plot(crash$Time, crash$ShockLocatio, xlab="time", ylab="location")
 abline(fit.time)
 ```
+
 
 ```{r}
 x <- ce1$Time

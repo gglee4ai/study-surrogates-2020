@@ -285,7 +285,7 @@ legend("bottomright", names(X)[6:9], lty=1, col=6:9, horiz=TRUE, bty="n", cex=0.
 ## 1.4 
 
 ```{r}
-wire <- read.csv("wire.csv")
+wire <- read.csv("dataset/wire.csv")
 wire
 ```
 
