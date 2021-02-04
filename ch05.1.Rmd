@@ -1,5 +1,0 @@
----
-title: "Chapter 5.1"
-output: html_notebook
----
-
