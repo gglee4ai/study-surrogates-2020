@@ -4,6 +4,8 @@ output: html_notebook
 ---
 
 
+# 4.1 Latin hypercube sample
+
 ```{r}
 set.seed(20200929)
 m <- 2
@@ -13,14 +15,18 @@ colnames(X) <-paste0("x", 1:m)
 X
 ```
 
+
 ```{r}
 par(pty="s")
 plot(X, xlim=c(0, 1), ylim=c(0, 1))
 ```
+
+
 ```{r}
 l <- (-(n - 1)/2):((n - 1)/2)
 l
 ```
+
 
 ```{r}
 L <- matrix(NA, nrow=n, ncol=m)
@@ -28,11 +34,13 @@ for(j in 1:m) L[,j] <- sample(l, n)
 L
 ```
 
+
 ```{r}
 U <- matrix(runif(n*m), ncol=m)
 X <- (L + (n - 1)/2 + U)/n
 X
 ```
+
 
 ```{r}
 par(pty="s")
@@ -40,6 +48,7 @@ plot(X, xlim=c(0, 1), ylim=c(0, 1), xlab="x1", ylab="x2")
 abline(h=c((l + (n-1)/2)/n, 1), col="grey", lty=2)
 abline(v=c((l + (n-1)/2)/n, 1), col="grey", lty=2)
 ```
+
 
 ```{r}
 mylhs <- function(n, m) {
@@ -68,6 +77,7 @@ abline(h=Dlist$g, col="grey", lty=2)
 abline(v=Dlist$g, col="grey", lty=2)
 ```
 
+
 ```{r}
 Is <- as.list(as.data.frame(combn(ncol(Dlist$X), 2)))
 par(pty="s")
@@ -79,6 +89,7 @@ for (i in Is) {
   abline(v=Dlist$g, col="grey", lty=3)
 }
 ```
+
 
 ```{r}
 X <- mylhs(1000, 3)$X
@@ -103,8 +114,9 @@ while(1) {
 ```{r}
 par(pty="s")
 plot(Dlist$X, xlim=c(0,1), ylim=c(0,1), xlab="x1", ylab="x2")
-text(0.2, 0.85, paste("count =", count))
+text(0.2, 0.85, paste("count =", count), cex = 0.8)
 abline(h=Dlist$g, col="grey", lty=2)
+abline(v=Dlist$g, col="grey", lty=2)
 ```
 
 
@@ -145,6 +157,8 @@ plot(Dlist$X, xlim=c(0,1), ylim=c(0,1), xlab="x1", ylab="x2")
 abline(v=Dlist$g[,1], col="grey", lty=2)
 abline(h=Dlist$g[,1], col="grey", lty=2)
 ```
+
+
 ```{r}
 X <- mylhs.beta(1000, 2, shape1=c(3,1/2), shape2=c(2,1/2))$X
 head(X)
@@ -161,11 +175,13 @@ hist(X[,2], main="", xlab="x2", freq=FALSE)
 lines(x, dbeta(x, 1/2, 1/2), col=2)
 ```
 
+
 ```{r}
 Dlist <- mylhs(20, 2)
 Xtrain <- Dlist$X[1:10,]
 Xtest <- Dlist$X[11:20,]
 ```
+
 
 ```{r}
 par(pty="s")
@@ -175,17 +191,21 @@ abline(v=Dlist$g, col="grey", lty=2)
 abline(h=Dlist$g, col="grey", lty=2)
 ```
 
-## 4.2
+# 4.2 Maximin designs
 
 ```{r}
 library(plgp)
 ```
 
+
 ```{r}
 distance(X[1:2], X[3:5])
 ```
 
+
 ```{r}
+X1 <- matrix(runif(n*m), ncol=m)
+dX1 <- distance(X1)
 X1 <- matrix(runif(n*m), ncol=m)
 dX1 <- distance(X1)
 dX1 <- dX1[upper.tri(dX1)]
@@ -203,6 +223,7 @@ plot(X1, xlim=c(0, 1.25), ylim=c(0, 1.25), xlab="x1", ylab="x2")
 points(X2, pch=20)
 legend("topright", paste("md =", round(c(md1, md2), 5)), pch=c(21, 20), cex=0.75)
 ```
+
 
 ```{r}
 T <- 10000
@@ -226,6 +247,7 @@ for(t in 1:T) {
 par(pty="s")
 plot(X1, xlim=c(0,1), ylim=c(0,1), xlab="x1", ylab="x2")
 ```
+
 
 ```{r}
 mymaximin <- function(n, m, T=100000) {
@@ -265,6 +287,7 @@ for(i in Is) {
   text(X[,i], labels=1:nrow(X))
 }
 ```
+
 
 ```{r}
 mymaximin <- function(n, m, T=100000, Xorig=NULL) {   
@@ -308,6 +331,7 @@ plot(X1, xlim=c(0,1), ylim=c(0,1), xlab="x1", ylab="x2")
 points(X2, pch=20)
 ```
 
+
 ```{r}
 X2 <- mymaximin(5, 3, Xorig=X)
 X <- rbind(X2, X)
@@ -324,6 +348,7 @@ for(i in Is) {
   text(X[,i], labels=1:nrow(X), col=c(rep(2,5), rep(1,10))) 
 }
 ```
+
 
 ```{r}
 library(scatterplot3d)
