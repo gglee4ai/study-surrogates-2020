@@ -3,6 +3,9 @@ title: "Chapter 3"
 output: html_notebook
 ---
 
+
+# 3.1 Path of steepest ascent
+
 ```{r}
 first.order <- function(x1, x2) {
   20 + 3*x1 - 1.5*x2
@@ -55,7 +58,7 @@ plasma
 library(magrittr)
 fit.int <- lm(etch ~ x1*x2, data=plasma)
 summary(fit.int)
-summary(fit.int)$coefficients %>% signif(digits=4)
+#summary(fit.int)$coefficients %>% signif(digits=4)
 ```
 
 
@@ -88,7 +91,8 @@ Dnew
 
 ```{r}
 x1 <- seq(-4, 1.5, length=100)
-x2 <- seq(-1.5, 4*delta2, length=100)
+# x2 <- seq(-1.5, 4*delta2, length=100) 
+x2 <- seq(-1.5, 4, length=100)  # aspect ratio = 1 유지
 g <- expand.grid(x1=x1, x2=x2)
 yhat <- matrix(predict(fit, newdata=g), ncol=length(x2))
 ```
@@ -308,8 +312,12 @@ y <- matrix(second.order(g[,1], g[,2]), ncol=length(x2))
 
 
 ```{r}
-par(mfrow=c(1,2), pty="s")
 persp(x1, x2, y, theta=30, phi=30, zlab="eta", expand=0.75, lwd=0.25)
+```
+
+
+```{r}
+par(pty="s")
 image(x1, x2, y, col=heat.colors(128))
 contour(x1, x2, y, add=TRUE)
 ```
@@ -352,6 +360,7 @@ lambda
 
 ```{r}
 V <- E$vectors[,o]
+V
 ```
 
 
@@ -377,9 +386,9 @@ library(dplyr)
 chem %>% 
   group_by(x1, x2) %>% 
   summarize(n = n(), .groups="drop") %>% 
-  ungroup() %>% 
-  pull(n) -> reps
-reps
+  ungroup() #%>% 
+  #pull(n) -> reps
+#reps
 ```
 
 
@@ -396,6 +405,8 @@ par(pty="s")
 plot(uchem, type="n")
 text(uchem, labels=reps)
 ```
+
+
 ```{r}
 X <- with(chem, data.frame(x1=x1, x2=x2, x11=x1^2, x22=x2^2, x12=x1*x2))
 y <- chem$y
@@ -475,6 +486,7 @@ text(xis[1], xis[2], "xs", pos=4)
 
 ```{r}
 ys <- as.numeric(coef(fit)[1] + 0.5*t(xs) %*% b)
+ys
 ```
 
 
@@ -488,6 +500,11 @@ rr
 rr$A2 <- rr$A^2
 rr$B2 <- rr$B^2
 rr$AB <- rr$A*rr$B
+rr
+```
+
+
+```{r}
 fit <- lm(y ~ ., data=rr)
 summary(fit)
 ```
@@ -550,6 +567,8 @@ saddle <- saddle[c(5:8, 1:4, 9:15)]
 
 saddle
 ```
+
+
 ```{r}
 fit <- lm(y ~ ., data=saddle)
 summary(fit)
@@ -656,6 +675,8 @@ p <- predict(fit, newdata=Xp, se.fit=TRUE)
 ```{r}
 cbind(R=rs, mu=mus, data.frame(pred=p$fit, se=p$se.fit), round(xp, 6))
 ```
+
+
 ```{r}
 par(pty="s")
 plot(rs, p$fit, type="b", ylim=c(20, 100), xlab="radius (R)", ylab="y.hat(x) & CIs")
@@ -670,6 +691,8 @@ g <- expand.grid(x12, x12)
 Xp <- data.frame(x1=g[,1], x2=g[,2], x11=g[,1]^2, x22=g[,2]^2, x12=g[,1]*g[,2])
 Xp
 ```
+
+
 ```{r}
 ## x3 = x4 = 0
 Xp$x3 <- Xp$x33 <- Xp$x4 <- Xp$x44 <-Xp$x34 <- 0
@@ -698,10 +721,14 @@ contour(x12, x12, matrix(p1$se.fit, nrow=length(x12)), add=TRUE)
 points(saddle[,1:2])
 points(saddle[apply(saddle[,3:4] == c(1, 1), 1, all), 1:2], pch=19)
 ```
+
+
 ```{r}
 crdat <- read.table("dataset/confreg.txt", header=TRUE)
 crdat
 ```
+
+
 ```{r}
 crdat$x11 <- crdat$x1^2
 crdat$x22 <- crdat$x2^2
