@@ -3,17 +3,16 @@ title: "Chapter 2"
 output: html_notebook
 ---
 
+
 ```{r}
 lgbb1 <- read.table("dataset/lgbb/lgbb_original.txt", header=TRUE)
 lgbb1
 ```
+
+
 ```{r}
 library(akima)
-```
-
-
-```{r}
-g <- interp(lgbb1$mach, lgbb1$alpha, lgbb1$lift, dupl="mean")
+g <- interp(lgbb1$mach, lgbb1$alpha, lgbb1$lift, duplicate="mean")
 par(pty="s")
 image(g, col=heat.colors(128), xlab="mach", ylab="alpha")
 points(lgbb1$mach, lgbb1$alpha, cex=0.25, pch=18)
@@ -21,7 +20,17 @@ points(lgbb1$mach, lgbb1$alpha, cex=0.25, pch=18)
 
 
 ```{r}
+# plotly 예제 
+# library(plotly)  # 축이 꼬여 있음
+# plot_ly(x = -g$y, y = g$x, z = g$z) %>% 
+#   add_surface() %>% 
+#   layout(scene = list(xaxis = list(title = "y"), yaxis = list(title = "x")))
+```
+
+
+```{r}
 apply(lgbb1[,1:3], 2, function(x) { length(unique(x)) })
+#lgbb1 %>% select(mach, alpha, beta) %>% summarize_all(~length(unique(.)))
 ```
 
 
@@ -40,9 +49,25 @@ legend("topright", c("beta = 0", "beta != 0"), col=1:2, lty=1:2, lwd=2)
 
 
 ```{r}
+# lgbb1 %>% 
+#   mutate(
+#     state = ifelse(alpha == 1 & beta == 0, "a1b0",
+#             ifelse(alpha == 1 & beta != 0, "a1bn0", "else"))) %>% 
+#   filter(state %in% c("a1b0", "a1bn0")) %>% 
+#   ggplot(aes(mach, lift, color = state, linetype = state)) +
+#   geom_line(alpha = .5, size = 1.2)
+```
+
+
+
+
+
+```{r}
 lgbb2 <- read.table("dataset/lgbb/lgbb_as.txt", header=TRUE)
 lgbb2
 ```
+
+
 ```{r}
 par(pty="s")
 plot(lgbb2$mach, lgbb2$alpha, xlab="mach", ylab="alpha", pch=18, cex=0.5)
@@ -64,9 +89,22 @@ text(4, 0.15, paste("length(a2) =", length(a2)))
 
 
 ```{r}
+# lgbb2 %>% 
+#   filter(alpha == 1) %>% 
+#   arrange(mach) %>% 
+#   ggplot(aes(mach, lift, color = beta)) +
+#   geom_point() +
+#   geom_line() +
+#   theme(aspect.ratio = 1)
+```
+
+
+```{r}
 load("dataset/lgbb/lgbb_fill.Rdata")
 lgbb.fill
 ```
+
+
 ```{r}
 lgbb.b1 <- lgbb.fill[lgbb.fill$beta == 1, ]
 g <- interp(lgbb.b1$mach, lgbb.b1$alpha, lgbb.b1$lift)
@@ -112,6 +150,7 @@ for(i in 1:sflen) {
 }
 ce2.sf <- as.data.frame(ce2.sf)
 names(ce2.sf) <- c(names(ce2), "EnergyScaleFactor", "LaserEnergy")
+#sum(!complete.cases(ce2.sf))
 ```
 
 
@@ -123,6 +162,7 @@ points(ce1$LaserEnergy, ce1$EnergyScaleFactor, col=2, pch=19)
 legend("bottomleft", c("CE2", "CE1"), col=1:2, pch=c(21,19))
 ```
 
+
 ```{r}
 u <- apply(crash, 2, function(x) { length(unique(x)) })
 u
@@ -130,8 +170,9 @@ u
 
 
 ```{r}
-fit <- lm(ShockLocation ~ ., data=crash[, u >1])
+fit <- lm(ShockLocation ~ ., data=crash[, u > 1])
 signif(summary(fit)$coefficients, digits = 3)
+# summary(fit)
 ```
 
 
@@ -144,50 +185,26 @@ abline(fit.time)
 
 
 ```{r}
+ce1 <- ce1[,-1]
+u.ce1 <- apply(ce1, 2, function(x) { length(unique(x)) })
+u.ce1
+```
+
+
+```{r}
+fit.ce1 <- lm(ShockLocation ~ ., data = ce1[, u.ce1 > 1])
+summary(fit.ce1)
+```
+
+
+
+```{r}
 x <- ce1$Time
 y <- ce1$LaserEnergy * ce1$EnergyScaleFactor
 g <- interp(x/max(x), y/max(y), ce1$ShockLocation, dupl="mean")
 par(pty="s")
 image(g, col=heat.colors(128), xlab="scaled time", ylab="scaled energy")
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
