@@ -1,4 +1,6 @@
 # My ignores
+.ipynb_checkpoints
+
 
 # My temp files
 *.swp
