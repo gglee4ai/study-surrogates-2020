@@ -1,0 +1,115 @@
+---
+title: "Final Project: Optimizing yield"
+subtitle: "Response Surface Methods & Computer Experiments (STAT 6984)"
+author: "Robert B. Gramacy (<rbg@vt.edu> : <http://bobby.gramacy.com>) <br> Department of Statistics, Virginia Tech"
+output: html_document
+---
+
+
+## Overview
+
+In this project you will be exploring the response surface involving the yield of a plot of land as a function of six nutrients added to the soil, and one propriety additive recommended by an outside consultant.  The measurements of the yield are noisy, and the noise level will vary throughout the experiment period.  You will be limited in the number of observations you can gather by a (rolling over) weekly budget.  Your primary goal will to find settings of the inputs that maximize yield, although there will be several secondary objectives having to do with the robustness of the optima you find, the relevance of the seven factors, and the dynamics of the noise process.  These details are outlined in more detail below.
+
+You can see your own progress relative to your peers on the leaderboad page: http://gramacylab.shinyapps.io/leaderboard.
+
+### Experimental interface
+
+You will obtain runs through a Shiny app hosted at http://gramacylab.shinyapps.io/yield.
+
+- When you click on that link it will give you an error message saying "User [] not found".
+- From there, you must log in with a token formed by concatenating your initials with your 4-digit code.
+	+ For example we will use "test1234" today.
+- Edit the URL by appending "?test1234" immediately after "yield"
+
+Through this interface you will be able to download your cache of runs, perform new runs, and inspect your run budget.
+
+- **Please be gentle on the app.  It is very much a work in progress!**
+- Feedback and suggestions, especially if you are a Shiny expert, are much appreciated.
+
+### Inputs and outputs
+
+Through the interface you will see numeric fields for seven inputs, and a sliding bar for a number of repetitions.
+
+The inputs are levels of nutrients, save the last one which is a level of a proprietary additive.  They are
+
+- N: nitrogen
+- P: phosphorus
+- K: potassium
+- Na: sodium
+- Ca: calcium
+- Mg: magnesium
+- Nx: proprietary additive
+
+All inputs should be non-negative, and there is no maximum enforced.  
+
+- The units are not super important (neither are the input names for that matter).
+
+The output is yield (units irrelevant) and it is noisy.  This means you won't get the same responses as your friends even if you colluded to try the same inputs.
+
+- The noise level changes every week,
+- but within a week it is held constant.
+- Replication can help with distinguishing between signal and noise, so the interface allows you to perform up to ten replicates for each set of inputs, which has a built-in economy of scale (see below).
+
+**There are no do-overs.**
+
+- Once you perform a run, there is no going back.
+
+### Budget
+
+In each week you get 100 units to spend on runs, and these units roll over from one week to the next.
+
+You could, in theory, save your entire budget until the end of the class, thereby banking on learning something key from now until then that will allow you to spend more resourcefully.  But there are two built-in discouragements against that.
+
+1. The noise changes every week, which means that 
+	a.  if you don't do runs every week you won't be able to learn the noise pattern (which is one of the secondary goals);
+	b.  it could be that the very last week is the noisiest week (I'm not telling!).
+2. You will have homework problems that ask you to perform runs and provide analysis based on those runs, and although you are left some discretion about how to proceed, those homework questions are not optional.
+
+The cost of runs depends on the number of replicates.
+
+- The first replicate costs 10 units.
+- The second, third, and forth cost 3 units each.
+- The fifth, sixth and seventh cost 2 units each.
+- The eight, ninth and tenth cost 1 unit each. 
+- More than ten replicates cannot be performed without doing a new batch of runs, with a reset cost structure.
+
+So there is a certain economy of scale to performing replication.  
+
+The interface will let you *overspend* your budget for the week
+
+- but once you overspend you will be locked out for the rest of the week,
+- and the amount by which you overspent will be subtracted from the following week's budget.
+
+### Downloading runs
+
+The recent runs are shown in a table on the interface page, and you can cycle through to see more runs if desired.  
+
+You are not expected to use the data directly in this tabular view format.  It is mostly provided as a visual confirmation that new runs have been successfully obtained.  A button at the bottom of the page allows you to download a CSV file with your runs.
+
+### Goals
+
+Your **primary goal**, over the course of the rest of the semester, is to optimize yield, with larger yields being better.  This was designed to be a challenging problem.  
+
+- You are the guinea pigs.  I have no idea whether or not the budget, for example, is sufficient to accomplish this task.
+- You are competing, in a loose sense, against your colleagues on this task.  I will be creating a leader-board script so that you can see how well you are doing compared to your colleagues.
+
+The **secondary goals** include the following
+
+- Determine which of the inputs (nutrients and additive) are useful for predicting yield.
+- Provide a sensitivity analysis via main effects and second order indices for each of the useful inputs.  
+- Determine which of the inputs have some slack when it comes to determining optimal conditions.  What ranges can they take on an essentially provide the same (optimum) yield?  *Don't forget to say what the settings of the other (more rigid) inputs are that optimize yield.*
+- You should be able to provide visualizations of 2d and 1d projections of the response surface, particularly nearby the settings which optimize yield.  
+- Provide an estimate of how the noise level varies over the weeks?
+- Always keep in mind the techniques introduced in the course when it comes to making decisions about which runs to perform, and (especially) when presenting your findings and describing the methods which led you to the conclusions you have drawn.
+- *Possibly more to come as I think of them.  Closer to the end of the semester I will provide a ruberic for the final report on this project.*
+
+## Rules
+
+Here are some rules which are not directly enforced by the interface, but which you are responsible for obeying.
+
+- You may not share your runs with your colleagues.  
+- I don't mind if you discuss the problem together, and exchange ideas, but don't give away information about key relationships in the data, or the location of optima, etc.
+- Do not share your login token with anyone.
+- Do not try to hack the interface.
+- There are no do-overs.  Once you've performed a run you can't get that budget back or undo that run.  So plan carefully.
+- You may bring in ideas from outside of class as a part of your decision making processes and analysis, but do not do so at the expense of demonstrating to me that you have learned something in this class.

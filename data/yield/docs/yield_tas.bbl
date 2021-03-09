@@ -1,0 +1,89 @@
+\begin{thebibliography}{15}
+\newcommand{\enquote}[1]{``#1''}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[\protect\citename{Booker et~al., }1999]{booker:etal:1999}
+Booker, A.~J., {Dennis, Jr.}, J.~E., Frank, P.~D., Serafani, D.~B., Torczon,
+  V., and Trosset, M.~W. (1999).
+\newblock \enquote{A Rigorous Framework for Optimization of Expensive Functions
+  by Surrogates.}
+\newblock {\em Structural Optimization\/}, 17, 1--13.
+
+\bibitem[\protect\citename{Box and Draper, }1987]{box:draper:1987}
+Box, G.~E. and Draper, N.~R. (1987).
+\newblock {\em Empirical model-building and response surfaces\/}.
+\newblock John Wiley \& Sons.
+
+\bibitem[\protect\citename{Chang et~al., }2017]{shiny}
+Chang, W., Cheng, J., Allaire, J., Xie, Y., and McPherson, J. (2017).
+\newblock {\em {\tt shiny}: Web Application Framework for {\sf R}\/}.
+\newblock R package version 1.0.5.
+
+\bibitem[\protect\citename{Gramacy, }2016]{gramacy:jss:2016}
+Gramacy, R. (2016).
+\newblock \enquote{laGP: Large-Scale Spatial Modeling via Local Approximate
+  Gaussian Processes in R.}
+\newblock {\em Journal of Statistical Software, Articles\/}, 72, 1, 1--46.
+
+\bibitem[\protect\citename{Gramacy and Lee, }2011]{gramacy:lee:2011}
+Gramacy, R.~B. and Lee, H. K.~H. (2011).
+\newblock \enquote{Optimization under Unknown Constraints.}
+\newblock In {\em Bayesian Statistics 9\/}, eds. J.~Bernardo, S.~Bayarri, J.~O.
+  Berger, A.~P. Dawid, D.~Heckerman, A.~F.~M. Smith, and M.~West,  229--256.
+  Oxford University Press.
+
+\bibitem[\protect\citename{Jones et~al., }1998]{jones:schonlau:welch:1998}
+Jones, D.~R., Schonlau, M., and Welch, W.~J. (1998).
+\newblock \enquote{Efficient Global Optimization of Expensive Black Box
+  Functions.}
+\newblock {\em J.~of Global Optimization\/}, 13, 455--492.
+
+\bibitem[\protect\citename{Lee, }2007]{lee:2007}
+Lee, H. K.~H. (2007).
+\newblock \enquote{Chocolate Chip Cookies as a Teaching Aid.}
+\newblock {\em The American Statistician\/}, 61, 4, 351--355.
+
+\bibitem[\protect\citename{Mead and Freeman, }1973]{mead:freeman:1973}
+Mead, R. and Freeman, K.~H. (1973).
+\newblock \enquote{An Experiment Game.}
+\newblock {\em Journal of the Royal Statistical Society. Series C (Applied
+  Statistics)\/}, 22, 1, 1--6.
+
+\bibitem[\protect\citename{Myers et~al., }2016]{myers:etal:2016}
+Myers, R.~H., Montgomery, D.~C., and Anderson-Cook, C. (2016).
+\newblock {\em Response surface methodology: process and product optimization
+  using designed experiments\/}.
+\newblock John Wiley \& Sons.
+
+\bibitem[\protect\citename{Nelder, }1966]{nelder:1966}
+Nelder, J. (1966).
+\newblock \enquote{Inverse polynomials, a useful group of multi-factor response
+  functions.}
+\newblock {\em Biometrics\/}, 22, 128--141.
+
+\bibitem[\protect\citename{{R Core Team}, }2017]{cranR}
+{R Core Team} (2017).
+\newblock {\em {\sf R}: A Language and Environment for Statistical
+  Computing\/}.
+\newblock R Foundation for Statistical Computing, Vienna, Austria.
+
+\bibitem[\protect\citename{Ram and Yochum, }2017]{rdrop2}
+Ram, K. and Yochum, C. (2017).
+\newblock {\em {\tt rdrop2}: Programmatic Interface to the 'Dropbox' API\/}.
+\newblock R package version 0.8.1.
+
+\bibitem[\protect\citename{Rasmussen and Williams, }2006]{rasmu:will:2006}
+Rasmussen, C.~E. and Williams, C. K.~I. (2006).
+\newblock {\em Gaussian Processes for Machine Learning\/}.
+\newblock The MIT Press.
+
+\bibitem[\protect\citename{Santner et~al., }2003]{sant:will:notz:2003}
+Santner, T.~J., Williams, B.~J., and Notz, W.~I. (2003).
+\newblock {\em The Design and Analysis of Computer Experiments\/}.
+\newblock New York, NY: Springer-Verlag.
+
+\bibitem[\protect\citename{Xie et~al., }2012]{xie:frazier:chick:2012}
+Xie, J., Frazier, P., and Chick, S. (2012).
+\newblock \enquote{Assemble to Order Simulator.}
+
+\end{thebibliography}

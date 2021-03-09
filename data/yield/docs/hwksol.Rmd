@@ -1,0 +1,430 @@
+---
+title: "Yield Homework Solutions"
+subtitle: "Response Surface Methods & Computer Experiments"
+author: "Robert B. Gramacy (<rbg@vt.edu> : <http://bobby.gramacy.com>) <br> Department of Statistics, Virginia Tech"
+output: html_document
+---
+
+
+## Overview
+
+Below are problem statements and solutions for homework problems on the `yield` game collected from the class homework sets, starting in homework 3.  Questions are in italics.
+
+
+### Homework 3: Steepest ascent, ridge analysis, and space-filling design
+
+*Consider a first dabble into addressing the "yield" problem from your [final project](http://bobby.gramacy.com/teaching/rsm/yield.html).  For this problem I want you to perform a first or second-order analysis (or multiple analyses) of your choosing.  And to do that you will likely find that you need to perform some more runs.  So choose wisely.  Below is a list of mandatory and suggested items to complete for this assignment.*
+
+**Mandatory:**
+
+a.  *Fit a first-order model to the original data (i.e., the $7\times5$ runs) to determine what (of the seven) main effects (ignoring week) are useful for describing the variation in $y$ on that data.*
+
+First, lets read the data, and reformat into an ordinary design matrix.
+
+```{r}
+data <- read.table("rbg_first17.txt", header=TRUE)[1:7,]
+nna <- sum(!is.na(data[,9:18]))
+D <- matrix(NA, nrow=nna, ncol=7)
+y <- rep(NA, nna)
+k <- 1
+for(i in 1:nrow(D)) {
+	for(j in 1:10) {
+		if(is.na(data[i,8+j])) { break; }
+		D[k,] <- as.numeric(data[i,2:8])
+		y[k] <- data[i,8+j]
+		k <- k+1
+	}
+}
+colnames(D) <- names(data)[2:8]
+```
+
+Then convert into coded inputs.
+
+```{r}
+r <- apply(D, 2, range)
+X <- as.data.frame(D)
+for(j in 1:ncol(X)) X[,j] <- 2*(X[,j] - r[1,j])/(r[2,j] - r[1,j])-1
+names(X) <- paste("x", 1:ncol(r), sep="")
+apply(X, 2, range)
+```
+
+Since three of the inputs don't vary, lets discard them for now.
+
+```{r}
+X <- X[,-(4:6)]
+```
+
+Now we're ready to do a first-order fit.
+
+```{r}
+fit1 <- lm(y~., data=X)
+summary(fit1)
+```
+
+- Not so good; lets try stepping backwards.
+
+```{r}
+fit1.bak <- step(fit1, scope=formula(fit1), direction="backward", trace=0)
+summary(fit1.bak)
+```
+
+- That's better, what a relief!
+
+b.  *Reduce your focus to the useful main effects and explore potential interactions.*
+
+Here is a first exploration of interactions, focusing on the first three main effects.
+
+```{r}
+fit2 <- lm(y~.^2, data=X[,1:3])
+fit2.bak <- step(fit2, scope=formula(fit2), direction="backward", trace=0)
+summary(fit2.bak) 
+```
+
+- OK, so we have some potential interactions; excluding just $x_1 \times x_3$.
+
+c.  *Based on the model you have obtained, what would a path of steepest ascent look like?  Where would you recommend performing a limited number of new runs?*
+
+One option would be to ignore the interaction terms, and do our typical steepest ascent calculations.  Looking at the coefficients above, that would move us in the right direction for three out of the four terms.  (Since $x_1$ and $x_2$ would move "negative", their product would move positive, i.e., the wrong way for the first interaction term.)  Nevertheless, that could look as follows.
+
+```{r}
+b <- coef(fit1.bak)[-1]
+delta <- b/abs(b[3])
+delta
+xi.path <- path <- data.frame(matrix(NA, nrow=5, ncol=length(b)))
+for(i in 1:5) {
+  path[i,] <- delta * (i-1)
+  xi.path[i,] <- (path[i,] + 1) * (r[2,1:3] - r[1,1:3])/2 + r[1,1:3]
+}
+path <- cbind(path, xi.path)
+names(path) <- c(names(delta), colnames(D[,1:3]))
+path
+```
+
+Another option could be to try to maximize the predictive surface corresponding to `fit2.bak` within the design region, and them maybe also searching outside the design region in increments.  However, the effect of $x_1x_2$ is going to be essentially negated by $x_2 x_3$ as we move in $(x_1, x_2, x_3)$ space.  So it is perhaps not surprising that we obtain the following outcome:
+
+```{r}
+f <- function(x) {
+	p <- predict(fit2.bak, newdata=data.frame(x1=x[1], x2=x[2], x3=x[3]))
+	return(0.0-as.numeric(p))
+}
+optim(rep(0,3), f, method="L-BFGS-B", lower=-1, upper=1)$par
+```
+
+- So instead of searching in a box, it could be better to constrain via radius.
+
+```{r}
+f <- function(x, mu) {
+	p <- predict(fit2.bak, newdata=data.frame(x1=x[1], x2=x[2], x3=x[3]))
+	return(0.0-as.numeric(p) + mu * t(x) %*% x)
+}
+mu <- 1/(1:4)
+xi.path2 <- path2 <- data.frame(matrix(NA, nrow=length(mu), ncol=length(b)))
+for(i in 1:length(mu)) {
+	path2[i,] <- optim(rep(0,3), f, method="L-BFGS-B", mu=mu[i])$par
+	xi.path2[i,] <- (path2[i,] + 1) * (r[2,1:3] - r[1,1:3])/2 + r[1,1:3]
+}
+path2 <- cbind(path2, xi.path2)
+names(path2) <- c(names(delta), colnames(D[,1:3]))
+path2
+```
+
+- This isn't that different from first first `path` actually.  The biggest effect is the downplaying of $x_1$ relative to $x_3$.
+
+**Suggested:** *(Although these are suggestions, you are expected to do something and report on what happened.  Don't forget to address the second mandatory section below.)*
+
+1.  *Actually perform some runs along your steepest ascent path and report on what you find.  (Don't do too many so you can still do some of the other suggestions below.)*
+
+Just to see what happens, I will take the first three elements of both paths above.  And then to merge with 6. below, I'll do a space-filling LHS design in the other 4 variables.  In particular ...
+
+```{r}
+library(lhs)
+D2 <- as.data.frame(2*randomLHS(6, 4)-1)
+r[1,4:6] <- 0
+r[2,4:6] <- apply(D[,4:6], 2, max)
+for(i in 1:nrow(D2)) D2[i,] <- (D2[i,] + 1) * (r[2,-(1:3)] - r[1,-(1:3)])/2 + r[1,-(1:3)]
+names(D2) <- colnames(D)[4:7]
+```
+
+The code above is what I ran to generate the new runs, but the actual runs I did are different (due to the random seed).  *And I'm not going to actually show them to you, or say how many replicates I performed.*  However, I will reveal that my new runs came back with much better yield values.
+
+```{r}
+newys <- as.numeric(as.matrix(read.table("rbg_first17.txt", header=TRUE)[8:12,9:18]))
+newys <- newys[!is.na(newys)]
+c(max(y), max(newys))
+```
+- So the new max is a bit better than the old max.
+
+By way of showing some persistent improvement, the comparison below shows that the averages in the new and old group have an even bigger gap.
+
+```{r}
+c(mean(y), mean(newys))
+```
+
+- The average response is more than one unit better from the new runs compared to the old.
+- This is a comparison that makes sense because the two runs sizes (before and after new runs) are similar.
+
+2.  *How would you augment the design in order to entertain a second-order model on a reduced set of inputs, such as a subset of the main effects you found above?*
+
+Before making any new suggestions, lets bring in the full set of data, convert to coded inputs, and then explore some new models.
+
+```{r}
+data <- read.table("rbg_first17.txt", header=TRUE)[1:13,]
+nna <- sum(!is.na(data[,9:18]))
+D <- matrix(NA, nrow=nna, ncol=7)
+y <- rep(NA, nna)
+k <- 1
+for(i in 1:nrow(D)) {
+	for(j in 1:10) {
+		if(is.na(data[i,8+j])) { break; }
+		D[k,] <- as.numeric(data[i,2:8])
+		y[k] <- data[i,8+j]
+		k <- k+1
+	}
+}
+colnames(D) <- names(data)[2:8]
+r <- apply(D, 2, range)
+X <- as.data.frame(D)
+for(j in 1:ncol(X)) X[,j] <- 2*(X[,j] - r[1,j])/(r[2,j] - r[1,j])-1
+names(X) <- paste("x", 1:ncol(r), sep="")
+apply(X, 2, range)
+```
+
+How about a simple first order model with interactions.
+
+```{r}
+fit <- lm(y~.^2, data=X)
+fit.bak <- step(fit, scope=formula(fit), direction="backward", trace=0)
+summary(fit.bak)
+```
+- Actually, a ton of stuff is useful: all main effects are useful, and several interactions pop up. 
+
+There are too many relevant variables in play, and clearly we don't have enough runs yet to trust a full second-order model (an easy
+thing to verify by trying to fit one), and my remaining budget this week not sufficient to fix that.  So I'm going to skip the whole second order stuff for now, and jump down to space filling in order to get a few more runs for the week.
+
+3.  *Obtain runs at some of those inputs and fit a second order model.  Perform an analysis of that fit, and report on anything you find to be useful (stationary points, nature of response surface, etc.)*
+
+(Skip.)
+
+4.  *Where does the second-order fit suggest you should perform more runs?  If you were to perform those runs, what would you choose for the settings of the other (inactive) input variables.*
+
+(Skip.)
+
+5.  *Possibly perform some runs that you described in your answer to part 4, above.*
+
+(Skip.)
+
+6.  *Now lets think about some space-filling runs.  Within a certain design region, which you should describe (and which may limit either or both of domain and variable), how would you choose new runs to best explore the as yet untried portions of that design space?    If you limited any variables in your search, what values of those variables would you use when you actually performed the runs?*
+
+I'm going to do a small number space-filling runs within the bounding box of the current cache of runs.  To keep it simple, I'm going to borrow the `mymaximin` function from class.
+
+```{r, message=FALSE}
+library(plgp) ## for distance()
+
+mymaximin <- function(n, m, T=100000, Xorig=NULL) {
+    
+    X <- matrix(runif(n*m), ncol=m)  ## initial design
+    X <- rbind(X, Xorig)             ## This is the only change!
+    d <- distance(X)
+    d <- as.numeric(d[upper.tri(d)])
+    md <- min(d)
+
+    for(t in 1:T) {
+        row <- sample(1:n, 1)
+        xold <- X[row,]       ## random row selection
+        X[row,] <- runif(m)   ## random new row
+        dprime <- distance(X)
+        dprime <- as.numeric(dprime[upper.tri(dprime)])
+        mdprime <- min(dprime)
+        if(mdprime > md) { md <- mdprime  ## accept
+        } else { X[row,] <- xold }        ## reject
+    }
+
+    return(X)
+}
+```
+
+Now, running to get four new locations:
+
+```{r cache=TRUE}
+Xu <- as.matrix(data[,2:8]) 
+for(j in 1:ncol(Xu)) Xu[,j] <- 2*(Xu[,j] - r[1,j])/(r[2,j] - r[1,j])-1
+Xnew <- mymaximin(4,7, Xorig=as.matrix(Xu))[1:4,]
+Dnew <- Xnew
+for(i in 1:nrow(Dnew)) Dnew[i,] <- (Dnew[i,] + 1) * (r[2,] - r[1,])/2 + r[1,]
+```
+
+7.  *Possibly choose a few runs found in part 6 above and obtain the responses.*
+
+I ran those four, randomly choosing the first one to have four replicates (so I can get a sense of the noise this week), and the other three to have two.
+
+**Mandatory (again):**
+
+d.  *Report on whatever you feel relevant based on the decisions and outcomes from the experiments and runs above.  If you chose not to exhaust your full budget of this week's runs, explain why not.  (Note, you are expected to spend some of your budget.)*
+
+Lets read the full data back in, and convert to coded variables.
+
+```{r}
+data <- read.table("rbg_first17.txt", header=TRUE)
+nna <- sum(!is.na(data[,9:18]))
+D <- matrix(NA, nrow=nna, ncol=7)
+y <- rep(NA, nna)
+k <- 1
+for(i in 1:nrow(D)) {
+	for(j in 1:10) {
+		if(is.na(data[i,8+j])) { break; }
+		D[k,] <- as.numeric(data[i,2:8])
+		y[k] <- data[i,8+j]
+		k <- k+1
+	}
+}
+colnames(D) <- names(data)[2:8]
+r <- apply(D, 2, range)
+X <- as.data.frame(D)
+for(j in 1:ncol(X)) X[,j] <- 2*(X[,j] - r[1,j])/(r[2,j] - r[1,j])-1
+names(X) <- paste("x", 1:ncol(r), sep="")
+```
+
+Now, how about re-fitting our simple first order model with interactions from 1. above.
+
+```{r}
+fit <- lm(y~.^2, data=X)
+fit.bak <- step(fit, scope=formula(fit), direction="backward", trace=0)
+summary(fit.bak)
+```
+
+- How about that!  We got some more relevant interactions.
+- But at the same time our $R^2$ went down.  It must have been that last time we were interpreting some of the noise as signal.
+
+
+Did our max change at all?
+
+```{r}
+max(y)
+```
+
+- Nope, exactly the same as before.  Better luck next time.
+
+
+### Homework 4: More space-filling design and new GP surrogates
+
+*Briefly tell me what you did this week on the yield problem, and describe what you learned.*
+
+First lets read in the data.
+
+```{r}
+data <- read.table("rbg_first17.txt", header=TRUE)
+nna <- sum(!is.na(data[,9:18]))
+X <- matrix(NA, nrow=nna, ncol=7)
+y <- rep(NA, nna)
+k <- 1
+for(i in 1:nrow(X)) {
+    for(j in 1:10) {
+        if(is.na(data[i,8+j])) { break; }
+        X[k,] <- as.numeric(data[i,2:8])
+        y[k] <- data[i,8+j]
+        k <- k+1
+    }
+}
+colnames(X) <- names(data)[2:8]
+```
+
+- For what I'm going to do, converting to coded inputs probably isn't important.
+
+I decided on some runs to perform in the following way.
+
+1. I calculated a sequential maximin design with eight points, one for each input dimension, in a domain limited by zero on the small end and 10% larger than the current design region at the large end.
+
+Here is our sequential `mymaxmin` from above, modified to scale the upper end of random draws in each coordinate.
+
+```{r}
+mymaximin <- function(n, m, upper, T=100000, Xorig=NULL) {
+    
+    X <- matrix(runif(n*m), ncol=m)  ## initial design
+    for(i in 1:n) X[i,] <- X[i,] * upper
+    X <- rbind(X, Xorig)             ## This is the only change!
+    d <- distance(X)
+    d <- as.numeric(d[upper.tri(d)])
+    md <- min(d)
+
+    for(t in 1:T) {
+        row <- sample(1:n, 1)
+        xold <- X[row,]       ## random row selection
+        X[row,] <- runif(m)*upper   ## random new row
+        dprime <- distance(X)
+        dprime <- as.numeric(dprime[upper.tri(dprime)])
+        mdprime <- min(dprime)
+        if(mdprime > md) { md <- mdprime  ## accept
+        } else { X[row,] <- xold }        ## reject
+    }
+
+    return(X)
+}
+```
+
+```{r cache=TRUE}
+upper <- apply(X, 2, max)*1.1
+Xnew <- mymaximin(8, 7, upper, Xorig=X)[1:8,]
+colnames(Xnew) <- colnames(X)
+```
+
+2. Then I fit the best first-order model I could, by eliminating irrelevant terms, to the data I already had.
+
+This is basically from the end of the last homework.
+
+```{r}
+fit <- lm(y~.^2, data=as.data.frame(X))
+fit.bak <- step(fit, scope=formula(fit), direction="backward", trace=0)
+summary(fit.bak)
+```
+
+I'm still not ready to go for quadratic models with the small amount of data that I have.
+
+3. I used my model to obtain predictions at the space-filling locations eight locations.
+
+```{r}
+p <- predict(fit.bak, newdata=as.data.frame(Xnew), se.fit=TRUE)
+```
+
+```{r}
+orders <- data.frame(sfit=sort(p$fit), ofit=order(p$fit), sse=sort(p$se.fit), ose=order(p$se.fit))
+orders
+```
+
+4. And among those I took the ones with the two larges predicted values and the two larges predictive variances.
+
+So it looks like, by my criteria, from the bottom rows of this data frame.  I decided to do two replicates at each of four locations to save some budget for next week.
+
+Lets see if I got lucky and made any improvement.
+
+```{r}
+data <- as.matrix(read.table("rbg_first21.txt", header=TRUE))
+oldys <- as.numeric(data[1:18,9:18])
+oldys <- oldys[!is.na(oldys)]
+newys <- as.numeric(data[18:21,9:18])
+newys <- newys[!is.na(newys)]
+c(max(oldys), max(newys))
+```
+
+- Nope! Oh, well.  Maybe its time to break out of the first order linear model with interactions.
+
+**Later on**, after we covered the details of GP regression, I coded up a sequential search method based on the GP predictive mean fit to the data.  The script fits a GP to the existing data, and then `optim` is called with the (negative of the) GP predictive mean as an objective, with search initialized at the current best value.  The bounds of the search were set to ten percent larger than the current design region to start with, and then after each iteration of search (after choosing optimizing and choosing to perform a yield run at that location) those bounds were narrowed by about 10% each time.  Eventually actual progress on maximal yield outputs was obtained.  To start out with, I performed several replicates to ensure that I could learn the noise for the week.  At the end I was performing just one evaluation (no further replicates).  I stopped the iterative search in this fashion once no further progress was being made.  The script that I used is in [yield_gp.R](yield_gp.R).
+
+### Homework 5: Expected improvement (EI)
+
+*Briefly tell me what you did this week on the yield problem, and describe what you learned.*
+
+My strategy this week was quite similar to last week, using GPs to model the yield surface using my cache of runs, but the goal was to guide search with EI this time rather than maximizing the predicted mean.  The script that I used may be found in [yield_gp_ei.R](yield_gp_ei.R).  Unfortunately, I discovered a bug in my implementation after using the code to gather several runs which ended up effectively space-filling in the input space as a consequence, rather obtaining ones than following EI.  After discovering my error I was able to gather better yield runs.  I found a couple that improved my (noisy) best yield value, but according to the [leaderboard](http://gramacylab.shinyapps.io/leaderboard), none of those proved yield actual improvements on my best de-noised value so far.
+
+
+### Homework 6: Integrated expected conditional improvement (IECI)
+
+*Briefly tell me what you did this week on the yield problem, and describe what you learned.*
+
+My strategy this week was quite similar to the last two weeks, using GPs to model the yield surface using my cache of runs, but the goal was to guide search with IECI this time, rather than EI or maximizing the predictive mean (EY).  The script that I used may be found in [yield_gp_ieci.R](yield_gp_ieci.R).  (Truth be told, when I didn't like the inputs that IECI was suggesting -- because they were at the very edges of the search space for some of the coordinates, I sometimes re-ran last week's EI script and used the values that came out of that instead.  But I did occasionally take those edge values.  After all, at the end I'll need to describe the whole surface.)  But following that program [those programs] I was able to find several inputs which improved upon my (noisy/raw) values of the objective, and a couple even offered improvements on the de-noised version as indicated by the [leaderboard]((http://gramacylab.shinyapps.io/leaderboard).
+
+
+### Homework 7: Miscellaney
+
+*Briefly tell me what you did this week on the yield problem, and describe what you learned.*
+
+Over the last two weeks I again alternated between [IECI](yield_gp_ieci.R) and [EI](yield_gp_ei.R) evaluations.  I preferred IECI for runs with multiple replicates, with the thinking that those would give me the best information about un-sampled areas.  (I already have a dense clump of points nearby my current maximuim.)  However, I also performed some "singleton" EI-based runs to obtain a more exploitive behavior.  The result of an otherwise ad hoc scheme of mixing the two search heuristics was a minor increase in the (de-noised) yield value compared to previous weeks.  Going forward, I plan to widen my search window a bit to make sure that I'm not missing any promising setting substantially outside the bounding box of my cache of runs.

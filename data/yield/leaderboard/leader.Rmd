@@ -1,0 +1,152 @@
+---
+title: "Yield Leaderboard"
+subtitle: "Response Surface Methods & Computer Experiments (STAT 6984)"
+author: "Robert B. Gramacy (<rbg@vt.edu> : <http://bobby.gramacy.com>) <br> Department of Statistics, Virginia Tech"
+output: html_document
+---
+
+
+## Visualizing progress
+
+```{r echo=FALSE, include=FALSE}
+## library(rdrop2)
+library(methods)
+library(shiny)
+source("yield.R")
+usedrop <- FALSE
+if(usedrop) {
+	token <- readRDS("droptoken.rds")
+	drop_acc(dtoken = token)
+	data.files <- drop_search(".txt", path="yield")$path
+	for(df in data.files) drop_get(df, overwrite=TRUE)
+}
+```
+
+Below are four views into the progress of students searches in the [yield project](http://bobby.gramacy.com/teaching/rsm/yield.html).  The goal is to maximize the yield of a a process in seven variables: concentrations of six nutrients and one additive.  The process can only be observed through a Shiny app, and with noise.  The noise process smoothly varies over the weeks of the experiment.
+
+
+The plot below shows the best actual yield values, i.e., observed without noise, obtained by each student over the weeks of the study period.
+
+- To make it harder to back out what the noise level in each week might be, the y-axis has been scaled so the bottom is at zero.
+
+```{r echo=FALSE}
+files <- list.files(pattern="txt")
+## wk <- as.numeric(strftime(Sys.time(),format="%W"))
+wk <- 51
+start.wk <- 38
+weeks <- (start.wk-1):wk
+## source("yield.R")
+library(methods)
+Ybest <- matrix(-Inf, nrow=length(weeks), ncol=length(files))
+for(i in 1:length(files)) {
+	data <- read.table(files[i], header=TRUE)
+	## data <- read.table(paste("~/Dropbox/yield/", files[i], sep=""), header=TRUE)
+	wk <- data[,1]
+	xs <- data[,2:8]
+	for(j in 1:length(weeks)) {
+		wi <- wk==weeks[j]
+		if(j > 1) Ybest[j,i] <- Ybest[j-1,i] 
+		if(sum(wi) == 0) next
+		ybnew <- max(as.matrix(yield.fn(xs[wi,-7])), na.rm=TRUE)
+		if(j == 1 || Ybest[j-1,i] < ybnew) Ybest[j,i] <- ybnew
+	} 
+}
+
+minY <- min(Ybest)
+Ybest <- Ybest/minY -1
+
+initials <- files
+for(i in 1:length(initials)) {
+	initials[i] <- sub("[0-9]+.txt", "", files[i])
+}
+```
+
+
+```{r, dev.args = list(bg = 'transparent'), fig.width=10, fig.height=8, fig.align="center", echo=FALSE}
+## pdf("weekly_denoised.pdf", width=7, height=6)
+matplot(weeks-start.wk+1, Ybest, type="l", main="Weekly Leaderboard", ylab="max yield", xlab="week",
+	col=1:length(initials), lty=1:length(initials), lwd=2)
+legend("topleft", initials, col=1:length(initials), lty=1:length(initials), lwd=2)
+## dev.off()
+```
+
+The next plot shows a raw analogue of the plot above, summarizing the actual noisy yield values stored in each student's cache.
+
+```{r echo=FALSE}
+Ybest <- matrix(-Inf, nrow=length(weeks), ncol=length(files))
+for(i in 1:length(files)) {
+	data <- read.table(files[i], header=TRUE)
+	## data <- read.table(paste("~/Dropbox/yield/", files[i], sep=""), header=TRUE)
+	wk <- data[,1]
+	ys <- data[,9:18]
+	for(j in 1:length(weeks)) {
+		wi <- wk==weeks[j]
+		if(j > 1) Ybest[j,i] <- Ybest[j-1,i] 
+		if(sum(wi) == 0) next
+		ybnew <- max(as.matrix(ys[wi,]), na.rm=TRUE)
+		if(j == 1 || Ybest[j-1,i] < ybnew) Ybest[j,i] <- ybnew
+	} 
+}
+```
+
+```{r, dev.args = list(bg = 'transparent'), fig.width=10, fig.height=8, fig.align="center", echo=FALSE}
+matplot(weeks-start.wk+1, Ybest, type="l", main="Weekly Leaderboard, raw", ylab="max yield", xlab="week",
+	col=1:length(initials), lty=1:length(initials), lwd=2)
+legend("topleft", initials, col=1:length(initials), lty=1:length(initials), lwd=2)
+```
+
+Here is a different view.  The plot below shows the actual (no-noise) yield values as a function of each run performed by the student.  
+
+- Here, a "run" means a press of the "Run" button on the Shiny app.
+- Again, the yield values have been scaled to obscure the true values relative to the noisy ones in other plots.
+
+```{r echo=FALSE}
+Ys <- list()
+for(i in 1:length(files)) {
+	data <- read.table(files[i], header=TRUE)
+	## data <- read.table(paste("~/Dropbox/yield/", files[i], sep=""), header=TRUE)
+	Ys[[i]] <- as.numeric(as.matrix(yield.fn(data[,2:7])))
+	for(j in 2:length(Ys[[i]])) {
+		if(Ys[[i]][j] < Ys[[i]][j-1]) Ys[[i]][j] <- Ys[[i]][j-1] 
+	}
+}
+lens <- sapply(Ys, length)
+```
+
+```{r, dev.args = list(bg = 'transparent'), fig.width=10, fig.height=8, fig.align="center", echo=FALSE}
+## pdf("run_denoised.pdf", width=7, height=6)
+plot(0, xlim=c(1, max(lens)), ylim=c(0, max(unlist(Ys)/minY-1)), type="n", xlab="run",
+	ylab="max yeild", main="Leaderboard by Run")
+for(i in 1:length(Ys)) {
+	lines(Ys[[i]]/minY-1, col=i, lty=i, lwd=2)
+}
+legend("bottomright", initials, col=1:length(initials), lty=1:length(initials), lwd=2)
+## dev.off()
+```
+
+Finally, below is the noisy view into the same thing, looking at the raw yield values stored in each student's cache.
+
+```{r echo=FALSE}
+Ys <- list()
+for(i in 1:length(files)) {
+	data <- read.table(files[i], header=TRUE)
+	## data <- read.table(paste("~/Dropbox/yield/", files[i], sep=""), header=TRUE)
+	ys <- as.numeric(t(as.matrix(data[,9:18])))
+	Ys[[i]] <- ys[!is.na(ys)]
+	for(j in 2:length(Ys[[i]])) {
+		if(is.na(Ys[[i]][j])) Ys[[i]][j] <- Ys[[i]][j-1]
+		else if(Ys[[i]][j] < Ys[[i]][j-1]) Ys[[i]][j] <- Ys[[i]][j-1] 
+	}
+}
+
+lens <- sapply(Ys, length)
+```
+
+```{r, dev.args = list(bg = 'transparent'), fig.width=10, fig.height=8, fig.align="center", echo=FALSE}
+plot(0, xlim=c(1, max(lens)), ylim=range(unlist(Ys)), pty="n", xlab="sample", 
+	ylab="max yield", main="Leaderboard by Run, raw")
+for(i in 1:length(Ys)) {
+	lines(Ys[[i]], col=i, lty=i, lwd=2)
+}
+legend("bottomright", initials, col=1:length(initials), lty=1:length(initials), lwd=2)
+```

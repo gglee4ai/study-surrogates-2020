@@ -1,0 +1,49 @@
+\begin{thebibliography}{8}
+\newcommand{\enquote}[1]{``#1''}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[\protect\citename{Box and Draper, }1987]{box:draper:1987}
+Box, G.~E. and Draper, N.~R. (1987).
+\newblock {\em Empirical model-building and response surfaces.\/}.
+\newblock John Wiley \& Sons.
+
+\bibitem[\protect\citename{Chang et~al., }2017]{shiny}
+Chang, W., Cheng, J., Allaire, J., Xie, Y., and McPherson, J. (2017).
+\newblock {\em shiny: Web Application Framework for R\/}.
+\newblock R package version 1.0.5.
+
+\bibitem[\protect\citename{Jones et~al., }1998]{jones:schonlau:welch:1998}
+Jones, D.~R., Schonlau, M., and Welch, W.~J. (1998).
+\newblock \enquote{Efficient Global Optimization of Expensive Black Box
+  Functions.}
+\newblock {\em J.~of Global Optimization\/}, 13, 455--492.
+
+\bibitem[\protect\citename{Lee, }2007]{lee:2007}
+Lee, H. K.~H. (2007).
+\newblock \enquote{Chocolate Chip Cookies as a Teaching Aid.}
+\newblock {\em The American Statistician\/}, 61, 4, 351--355.
+
+\bibitem[\protect\citename{Mead and Freeman, }1973]{mead:freeman:1973}
+Mead, R. and Freeman, K.~H. (1973).
+\newblock \enquote{An Experiment Game.}
+\newblock {\em Journal of the Royal Statistical Society. Series C (Applied
+  Statistics)\/}, 22, 1, 1--6.
+
+\bibitem[\protect\citename{Myers et~al., }2016]{myers:etal:2016}
+Myers, R.~H., Montgomery, D.~C., and Anderson-Cook, C. (2016).
+\newblock {\em Response surface methodology: process and product optimization
+  using designed experiments\/}.
+\newblock John Wiley \& Sons.
+
+\bibitem[\protect\citename{Nelder, }1966]{nelder:1966}
+Nelder, J. (1966).
+\newblock \enquote{Inverse polynomials, a useful group of multi-factor response
+  functions.}
+\newblock {\em Biometrics\/}, 22, 128--141.
+
+\bibitem[\protect\citename{{R Core Team}, }2017]{cranR}
+{R Core Team} (2017).
+\newblock {\em R: A Language and Environment for Statistical Computing\/}.
+\newblock R Foundation for Statistical Computing, Vienna, Austria.
+
+\end{thebibliography}

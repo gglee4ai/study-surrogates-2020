@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2017/Debian)
+Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
+The top-level auxiliary file: yield.aux
+The style file: jasa.bst
+Database file #1: yield.bib
+You've used 8 entries,
+            2666 wiz_defined-function locations,
+            650 strings with 5689 characters,
+and the built_in function-call counts, 3324 in all, are:
+= -- 312
+> -- 119
+< -- 10
++ -- 46
+- -- 36
+* -- 283
+:= -- 590
+add.period$ -- 28
+call.type$ -- 8
+change.case$ -- 51
+chr.to.int$ -- 8
+cite$ -- 8
+duplicate$ -- 149
+empty$ -- 259
+format.name$ -- 60
+if$ -- 654
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 8
+newline$ -- 45
+num.names$ -- 32
+pop$ -- 46
+preamble$ -- 1
+purify$ -- 50
+quote$ -- 0
+skip$ -- 115
+stack$ -- 0
+substring$ -- 172
+swap$ -- 31
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 66
+warning$ -- 0
+while$ -- 22
+width$ -- 0
+write$ -- 113
